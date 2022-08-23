@@ -52,6 +52,9 @@
     "no-shadow": "off",
     "@typescript-eslint/no-shadow": ["error"],
     "prettier/prettier": "error",
-    "func-names": "off"
+    "func-names": "off",
+
+    "jsx-a11y/no-noninteractive-element-interactions": "off",
+    "jsx-a11y/click-events-have-key-events": "off"
   }
 }

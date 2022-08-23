@@ -9,6 +9,7 @@
     "lint": "eslint src/**/*.{ts,tsx}"
   },
   "dependencies": {
+    "@picocss/pico": "^1.5.3",
     "@supabase/supabase-js": "^1.35.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -23,6 +24,7 @@
     "@typescript-eslint/eslint-plugin": "^5.33.1",
     "@typescript-eslint/parser": "^5.33.1",
     "@vitejs/plugin-react": "^2.0.1",
+    "clsx": "^1.2.1",
     "eslint": "^8.22.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-prettier": "^8.5.0",

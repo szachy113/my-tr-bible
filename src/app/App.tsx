@@ -1,14 +1,20 @@
-import { useQuery } from 'react-query';
-import { fetchBook } from '@utils/fetchBook';
-import Spinner from '@components/Spinner';
-import '@styles/main.css';
+import ReferenceForm from '@components/ReferenceForm';
+import Text from '@components/Text';
+import AppContextProvider from './AppContextProvider';
+import styles from './App.module.css';
+import '@picocss/pico';
+import '../main.css';
+
+const { container } = styles;
 
 export default function App() {
-  const { isLoading, data } = useQuery('books', () => fetchBook());
-
-  if (isLoading) {
-    return <Spinner />;
-  }
-
-  return <div>{data!.length} books loaded.</div>;
+  // TODO: Navigation.
+  return (
+    <div className={container}>
+      <AppContextProvider>
+        <ReferenceForm />
+        <Text />
+      </AppContextProvider>
+    </div>
+  );
 }
