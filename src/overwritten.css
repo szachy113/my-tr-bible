@@ -1,0 +1,12 @@
+:root:not([data-theme='dark']),
+:root:not([data-theme='light']) {
+  --primary: #fb8c00;
+}
+
+:root:not([data-theme='light']) form._container_11mv7_1 {
+  --typography-spacing-vertical: 0;
+}
+
+:root:not([data-theme='light']) form._container_11mv7_1 input {
+  --spacing: 0;
+}

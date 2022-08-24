@@ -1,7 +1,0 @@
-body {
-  line-height: 1.5;
-}
-
-:root:not([data-theme='light']) {
-  --primary: #fb8c00;
-}

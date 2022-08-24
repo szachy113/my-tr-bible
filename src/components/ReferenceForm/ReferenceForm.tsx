@@ -1,5 +1,8 @@
 import { useContext, useCallback } from 'react';
 import { AppCtx } from '@app/AppContextProvider';
+import styles from './ReferenceForm.module.css';
+
+const { container } = styles;
 
 export default function ReferenceForm() {
   const { data, setCurrentLocation } = useContext(AppCtx)!;
@@ -63,7 +66,7 @@ export default function ReferenceForm() {
   );
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className={container} onSubmit={handleSubmit}>
       <input type="text" />
     </form>
   );

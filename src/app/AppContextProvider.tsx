@@ -26,7 +26,7 @@ export const AppCtx = createContext<AppContext | null>(null);
 export default function AppContextProvider({ children }: PropsWithChildren) {
   const { isLoading, data } = useQuery('books', () => fetchBook());
   const [currentLocation, _setCurrentLocation] = useState<CurrentLocation>({
-    bookIndex: 42, // NOTE: John
+    bookIndex: 42, // NOTE: John.
     chapterIndex: 0,
     verseIndex: -1,
   });
