@@ -9,7 +9,7 @@ import {
 import { useQuery } from 'react-query';
 import Spinner from '@components/Spinner';
 
-interface CurrentLocation {
+export interface CurrentLocation {
   bookIndex: number;
   chapterIndex: number;
   verseIndex: number;

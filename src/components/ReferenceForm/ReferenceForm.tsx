@@ -1,15 +1,39 @@
-import { useContext, useCallback } from 'react';
+import { useContext, useRef, useCallback, useEffect } from 'react';
 import { AppCtx } from '@app/AppContextProvider';
 import styles from './ReferenceForm.module.css';
 
+interface ReferenceFormProps {
+  setShouldShow: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
 const { container } = styles;
 
-export default function ReferenceForm() {
+function useFocusOnMount(): React.MutableRefObject<HTMLInputElement | null> {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const executedRef = useRef(false);
+
+  useEffect(() => {
+    if (!inputRef.current || executedRef.current) {
+      return;
+    }
+
+    inputRef.current.focus();
+
+    executedRef.current = true;
+  }, []);
+
+  return inputRef;
+}
+
+export default function ReferenceForm({ setShouldShow }: ReferenceFormProps) {
   const { data, setCurrentLocation } = useContext(AppCtx)!;
+  const inputRef = useFocusOnMount();
 
   const handleSubmit = useCallback<React.ChangeEventHandler<HTMLFormElement>>(
     (e) => {
       e.preventDefault();
+      inputRef.current!.blur();
+      setShouldShow(false);
 
       const input = e.target[0] as HTMLInputElement;
       const [book, chapter, verse] = input.value.split(/[\s|,|:|.]/g);
@@ -27,6 +51,7 @@ export default function ReferenceForm() {
         return;
       }
 
+      window.scrollTo(0, 0);
       setCurrentLocation('bookIndex', correspondingBookIndex);
 
       const targetChapterNumber = Number(chapter);
@@ -59,15 +84,15 @@ export default function ReferenceForm() {
           ? targetChapter.length - 1
           : targetVerseNumber - 1;
 
-      // TODO: Trigger scrollIntoView.
+      // TODO: Trigger scrollIntoView (same verse).
       setCurrentLocation('verseIndex', targetVerseIndex);
     },
-    [data, setCurrentLocation],
+    [data, inputRef, setShouldShow, setCurrentLocation],
   );
 
   return (
     <form className={container} onSubmit={handleSubmit}>
-      <input type="text" />
+      <input ref={inputRef} type="text" />
     </form>
   );
 }

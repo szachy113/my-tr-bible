@@ -3,14 +3,18 @@ import { AppCtx } from '@app/AppContextProvider';
 import Book from '@components/Book';
 import styles from './Text.module.css';
 
+interface TextProps {
+  shouldShowReferenceForm: boolean;
+}
+
 const { title } = styles;
 
-function useElementMarginBottom<T>(): [
+function useMarginBottom<T>(): [
   elementRef: React.MutableRefObject<(T & HTMLElement) | null>,
-  elementMarginBottom: string,
+  elementMarginBottom: number,
 ] {
   const elementRef = useRef<(T & HTMLElement) | null>(null);
-  const [elementMarginBottom, setElementMarginBottom] = useState('0px');
+  const [elementMarginBottom, setElementMarginBottom] = useState(0);
 
   useEffect(() => {
     if (!elementRef.current) {
@@ -19,18 +23,18 @@ function useElementMarginBottom<T>(): [
 
     const { marginBottom } = getComputedStyle(elementRef.current);
 
-    setElementMarginBottom(marginBottom);
+    setElementMarginBottom(parseFloat(marginBottom));
   }, []);
 
   return [elementRef, elementMarginBottom];
 }
 
-export default function Text() {
+export default function Text({ shouldShowReferenceForm }: TextProps) {
   const { data, currentLocation } = useContext(AppCtx)!;
 
   // NOTE: For the gap to be consistent when the form is hidden.
   const [headingRef, headingMarginBottom] =
-    useElementMarginBottom<HTMLHeadingElement>();
+    useMarginBottom<HTMLHeadingElement>();
 
   if (!data) {
     return null;
@@ -45,7 +49,9 @@ export default function Text() {
         ref={headingRef}
         className={title}
         style={{
-          marginTop: headingMarginBottom,
+          marginTop: shouldShowReferenceForm
+            ? headingMarginBottom * 2
+            : headingMarginBottom,
         }}
       >
         {name === 'Księga Psalmów' ? 'Psalm' : name}{' '}

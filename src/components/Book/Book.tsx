@@ -1,6 +1,6 @@
 import { Chapter } from '@utils/fetchBook';
 import { useRef, useContext, useEffect, useCallback } from 'react';
-import { AppCtx } from '@app/AppContextProvider';
+import { AppCtx, CurrentLocation } from '@app/AppContextProvider';
 import clsx from 'clsx';
 import styles from './Book.module.css';
 
@@ -15,9 +15,10 @@ const {
   focused,
 } = styles;
 
-export default function Book({ content }: BookProps) {
+function useScrollIntoView(
+  currentLocation: CurrentLocation,
+): React.MutableRefObject<HTMLParagraphElement | null> {
   const verseRef = useRef<HTMLParagraphElement | null>(null);
-  const { currentLocation, setCurrentLocation } = useContext(AppCtx)!;
 
   useEffect(() => {
     if (!verseRef.current) {
@@ -27,7 +28,14 @@ export default function Book({ content }: BookProps) {
     verseRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [currentLocation.verseIndex]);
 
-  const renderChapter = useCallback<(chaper: Chapter) => JSX.Element[]>(
+  return verseRef;
+}
+
+export default function Book({ content }: BookProps) {
+  const { currentLocation, setCurrentLocation } = useContext(AppCtx)!;
+  const verseRef = useScrollIntoView(currentLocation);
+
+  const renderChapter = useCallback<(chapter: Chapter) => JSX.Element[]>(
     (chapter) =>
       chapter.map((verse, j) => (
         <p
@@ -42,7 +50,7 @@ export default function Book({ content }: BookProps) {
           {verse.text}
         </p>
       )),
-    [currentLocation.verseIndex, setCurrentLocation],
+    [currentLocation.verseIndex, verseRef, setCurrentLocation],
   );
 
   return (
