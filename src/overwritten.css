@@ -3,10 +3,15 @@
   --primary: #fb8c00;
 }
 
-:root:not([data-theme='light']) form._container_11mv7_1 {
+:root:not([data-theme='light']) form,
+:root:not([data-theme='light']) form input {
+  background-color: rgba(14, 20, 25, calc(1 / 3));
+}
+
+:root:not([data-theme='light']) form {
   --typography-spacing-vertical: 0;
 }
 
-:root:not([data-theme='light']) form._container_11mv7_1 input {
+:root:not([data-theme='light']) form input {
   --spacing: 0;
 }

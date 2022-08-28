@@ -1,11 +1,12 @@
 import { Chapter } from '@utils/fetchBook';
-import { useRef, useContext, useEffect, useCallback } from 'react';
-import { AppCtx, CurrentLocation } from '@app/AppContextProvider';
+import { useContext, useEffect, useCallback } from 'react';
+import { CurrentLocation, AppCtx } from '@app/AppContextProvider';
 import clsx from 'clsx';
 import styles from './Book.module.css';
 
 interface BookProps {
   content: Chapter[];
+  isHeadingInView: boolean | undefined;
 }
 
 const {
@@ -15,42 +16,66 @@ const {
   focused,
 } = styles;
 
-function useScrollIntoView(
-  currentLocation: CurrentLocation,
-): React.MutableRefObject<HTMLParagraphElement | null> {
-  const verseRef = useRef<HTMLParagraphElement | null>(null);
+function useScrollOnLocationChange(
+  { bookIndex, chapterIndex, verseIndex }: CurrentLocation,
+  currentVerseRef: React.MutableRefObject<HTMLParagraphElement | null>,
+): void {
+  useEffect(() => window.scrollTo(0, 0), [bookIndex, chapterIndex]);
 
   useEffect(() => {
-    if (!verseRef.current) {
+    if (!currentVerseRef.current) {
       return;
     }
 
-    verseRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, [currentLocation.verseIndex]);
+    // FIXME: It doesn't center the verse properly.
+    const currentVerseRect = currentVerseRef.current.getBoundingClientRect();
+    const absoluteCurrentVerseTop = currentVerseRect.top + window.pageYOffset;
+    const center = absoluteCurrentVerseTop - window.innerHeight / 2;
 
-  return verseRef;
+    window.scrollTo({
+      top: center,
+      behavior: 'smooth',
+    });
+
+    // currentVerseRef.current.scrollIntoView({
+    //   behavior: 'smooth',
+    //   block: 'center',
+    // });
+  }, [currentVerseRef, verseIndex]);
 }
 
-export default function Book({ content }: BookProps) {
-  const { currentLocation, setCurrentLocation } = useContext(AppCtx)!;
-  const verseRef = useScrollIntoView(currentLocation);
+export default function Book({ content, isHeadingInView }: BookProps) {
+  const { currentLocation, currentVerseRef, setCurrentLocation } =
+    useContext(AppCtx)!;
+
+  useScrollOnLocationChange(currentLocation, currentVerseRef);
 
   const renderChapter = useCallback<(chapter: Chapter) => JSX.Element[]>(
     (chapter) =>
       chapter.map((verse, j) => (
         <p
-          ref={currentLocation.verseIndex === j ? verseRef : null}
+          ref={currentLocation.verseIndex === j ? currentVerseRef : null}
           className={clsx(verseContainer, {
             [focused]: currentLocation.verseIndex === j,
           })}
           key={verse.id}
           onClick={() => setCurrentLocation('verseIndex', j)}
         >
-          <b className={verseNumber}>{j + 1}</b>
+          <b className={verseNumber}>
+            {!isHeadingInView
+              ? `${currentLocation.chapterIndex + 1}:${j + 1}`
+              : j + 1}
+          </b>
           {verse.text}
         </p>
       )),
-    [currentLocation.verseIndex, verseRef, setCurrentLocation],
+    [
+      currentLocation.verseIndex,
+      currentVerseRef,
+      setCurrentLocation,
+      isHeadingInView,
+      currentLocation.chapterIndex,
+    ],
   );
 
   return (

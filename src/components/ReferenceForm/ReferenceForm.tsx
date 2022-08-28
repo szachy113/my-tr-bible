@@ -1,38 +1,83 @@
-import { useContext, useRef, useCallback, useEffect } from 'react';
+import { useRef, useContext, useCallback, useEffect } from 'react';
 import { AppCtx } from '@app/AppContextProvider';
+import { useEventListener, useInViewport } from 'ahooks';
 import styles from './ReferenceForm.module.css';
 
 interface ReferenceFormProps {
+  shouldShow: boolean;
   setShouldShow: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const { container } = styles;
 
-function useFocusOnMount(): React.MutableRefObject<HTMLInputElement | null> {
+function useInputFocus(
+  shouldShow: boolean,
+): React.MutableRefObject<HTMLInputElement | null> {
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const executedRef = useRef(false);
 
   useEffect(() => {
-    if (!inputRef.current || executedRef.current) {
+    if (!inputRef.current) {
       return;
     }
 
-    inputRef.current.focus();
+    if (!shouldShow) {
+      inputRef.current.blur();
 
-    executedRef.current = true;
-  }, []);
+      return;
+    }
+
+    if (shouldShow) {
+      inputRef.current.focus();
+    }
+  }, [shouldShow]);
+
+  useEventListener('keydown', (e) => {
+    if (!inputRef.current) {
+      return;
+    }
+
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      inputRef.current.blur();
+    }
+  });
 
   return inputRef;
 }
 
-export default function ReferenceForm({ setShouldShow }: ReferenceFormProps) {
-  const { data, setCurrentLocation } = useContext(AppCtx)!;
-  const inputRef = useFocusOnMount();
+export default function ReferenceForm({
+  shouldShow,
+  setShouldShow,
+}: ReferenceFormProps) {
+  const { data, currentLocation, setCurrentLocation, currentVerseRef } =
+    useContext(AppCtx)!;
+  const [isCurrentVerseInView] = useInViewport(currentVerseRef.current, {
+    threshold: 1,
+  });
+  const containerRef = useRef<HTMLFormElement | null>(null);
+  const inputRef = useInputFocus(shouldShow);
 
+  useEventListener('keydown', (e) => {
+    const navigationKeys = ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft'];
+
+    if (navigationKeys.includes(e.key)) {
+      return;
+    }
+
+    if (shouldShow) {
+      if (e.key === 'Escape') {
+        setShouldShow(false);
+      }
+
+      return;
+    }
+
+    setShouldShow(true);
+  });
+
+  // TODO: Tidy it up.
   const handleSubmit = useCallback<React.ChangeEventHandler<HTMLFormElement>>(
     (e) => {
       e.preventDefault();
-      inputRef.current!.blur();
       setShouldShow(false);
 
       const input = e.target[0] as HTMLInputElement;
@@ -51,22 +96,31 @@ export default function ReferenceForm({ setShouldShow }: ReferenceFormProps) {
         return;
       }
 
-      window.scrollTo(0, 0);
       setCurrentLocation('bookIndex', correspondingBookIndex);
 
       const targetChapterNumber = Number(chapter);
+      const correspondingBook = data[correspondingBookIndex];
+      const targetChapterIndex =
+        targetChapterNumber > correspondingBook.content.length
+          ? correspondingBook.content.length - 1
+          : targetChapterNumber - 1;
+
+      if (
+        (correspondingBookIndex === currentLocation.bookIndex ||
+          targetChapterIndex === currentLocation.chapterIndex) &&
+        !verse
+      ) {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth',
+        });
+      }
 
       if (!targetChapterNumber) {
         setCurrentLocation('chapterIndex', 0);
 
         return;
       }
-
-      const correspondingBook = data[correspondingBookIndex];
-      const targetChapterIndex =
-        targetChapterNumber > correspondingBook.content.length
-          ? correspondingBook.content.length - 1
-          : targetChapterNumber - 1;
 
       setCurrentLocation('chapterIndex', targetChapterIndex);
 
@@ -84,14 +138,41 @@ export default function ReferenceForm({ setShouldShow }: ReferenceFormProps) {
           ? targetChapter.length - 1
           : targetVerseNumber - 1;
 
-      // TODO: Trigger scrollIntoView (same verse).
       setCurrentLocation('verseIndex', targetVerseIndex);
+
+      if (
+        targetVerseIndex !== currentLocation.verseIndex ||
+        !currentVerseRef.current
+      ) {
+        return;
+      }
+
+      currentVerseRef.current.scrollIntoView({
+        behavior: isCurrentVerseInView ? 'auto' : 'smooth',
+        block: 'center',
+      });
     },
-    [data, inputRef, setShouldShow, setCurrentLocation],
+    [
+      data,
+      setShouldShow,
+      setCurrentLocation,
+      currentLocation,
+      currentVerseRef,
+      isCurrentVerseInView,
+    ],
   );
 
   return (
-    <form className={container} onSubmit={handleSubmit}>
+    <form
+      ref={containerRef}
+      style={{
+        transform: `translateY(${
+          !shouldShow ? `-${containerRef.current?.offsetHeight ?? 0}px` : 0
+        })`,
+      }}
+      className={container}
+      onSubmit={handleSubmit}
+    >
       <input ref={inputRef} type="text" />
     </form>
   );

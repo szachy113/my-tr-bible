@@ -113,5 +113,5 @@ export async function fetchBook(
   return fetchBook([...books, book], id + 1);
 }
 
-// TODO: Make it fetch books and their information.
+// TODO: Make it fetch books w/ their information.
 // export async function fetchBooks() {}

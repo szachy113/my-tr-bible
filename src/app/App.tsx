@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useEventListener, useScroll } from 'ahooks';
+import { useState } from 'react';
+import { useEventListener } from 'ahooks';
 import ReferenceForm from '@components/ReferenceForm';
 import Text from '@components/Text';
 import AppContextProvider from './AppContextProvider';
@@ -12,60 +12,42 @@ const { container } = styles;
 export default function App() {
   const [shouldShowReferenceForm, setShouldShowReferenceForm] = useState(true);
   const [previousTopPos, setPreviousTopPos] = useState(0);
-  const scroll = useScroll();
 
-  useEffect(() => {
-    if (!scroll) {
+  useEventListener('scroll', () => {
+    const currentTopPos = document.documentElement.scrollTop;
+    const diff = Math.abs(currentTopPos - previousTopPos);
+
+    if (
+      currentTopPos === previousTopPos ||
+      (diff === previousTopPos && diff > 13)
+    ) {
       return;
     }
 
-    const { top: currentTopPos } = scroll;
+    const hasUserOrigin = diff >= 12;
 
-    if (currentTopPos === previousTopPos) {
-      return;
-    }
-
-    if (currentTopPos > previousTopPos) {
-      setShouldShowReferenceForm(false);
-    }
-
-    if (currentTopPos < previousTopPos) {
-      setShouldShowReferenceForm(true);
-    }
-
-    setPreviousTopPos(currentTopPos);
-  }, [scroll, previousTopPos]);
-
-  useEventListener('keydown', (e) => {
-    const scrollNavigationKeys = ['ArrowDown', 'J', 'ArrowUp', 'K'];
-
-    if (scrollNavigationKeys.includes(e.key)) {
-      return;
-    }
-
-    if (shouldShowReferenceForm) {
-      // TODO: Toggle focus.
-
-      const escapeKeys = ['Escape'];
-
-      if (escapeKeys.includes(e.key)) {
+    if (hasUserOrigin) {
+      if (currentTopPos > previousTopPos) {
         setShouldShowReferenceForm(false);
       }
 
-      return;
+      if (currentTopPos < previousTopPos) {
+        setShouldShowReferenceForm(true);
+      }
     }
 
-    setShouldShowReferenceForm(true);
+    setPreviousTopPos(currentTopPos);
   });
 
-  // TODO: Navigation.
+  // TODO: Navigation etc.
   return (
     <div className={container}>
       <AppContextProvider>
-        {shouldShowReferenceForm && (
-          <ReferenceForm setShouldShow={setShouldShowReferenceForm} />
-        )}
-        <Text shouldShowReferenceForm={shouldShowReferenceForm} />
+        <ReferenceForm
+          shouldShow={shouldShowReferenceForm}
+          setShouldShow={setShouldShowReferenceForm}
+        />
+        <Text />
       </AppContextProvider>
     </div>
   );

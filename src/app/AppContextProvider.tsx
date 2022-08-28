@@ -5,6 +5,7 @@ import {
   useState,
   useCallback,
   useMemo,
+  useRef,
 } from 'react';
 import { useQuery } from 'react-query';
 import Spinner from '@components/Spinner';
@@ -19,6 +20,7 @@ interface AppContext {
   data: Book[] | null;
   currentLocation: CurrentLocation;
   setCurrentLocation: (key: string, value: number) => void;
+  currentVerseRef: React.MutableRefObject<HTMLParagraphElement | null>;
 }
 
 export const AppCtx = createContext<AppContext | null>(null);
@@ -26,10 +28,11 @@ export const AppCtx = createContext<AppContext | null>(null);
 export default function AppContextProvider({ children }: PropsWithChildren) {
   const { isLoading, data } = useQuery('books', () => fetchBook());
   const [currentLocation, _setCurrentLocation] = useState<CurrentLocation>({
-    bookIndex: 42, // NOTE: John.
+    bookIndex: 42, // NOTE: John
     chapterIndex: 0,
     verseIndex: -1,
   });
+  const currentVerseRef = useRef<HTMLParagraphElement | null>(null);
 
   const setCurrentLocation = useCallback<(key: string, value: number) => void>(
     (key, value) =>
@@ -45,6 +48,7 @@ export default function AppContextProvider({ children }: PropsWithChildren) {
       data: data ?? null,
       currentLocation,
       setCurrentLocation,
+      currentVerseRef,
     }),
     [data, currentLocation, setCurrentLocation],
   );
