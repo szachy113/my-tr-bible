@@ -45,8 +45,12 @@ function useScrollOnLocationChange(
 }
 
 export default function Book({ content, isHeadingInView }: BookProps) {
-  const { currentLocation, currentVerseRef, setCurrentLocation } =
-    useContext(AppCtx)!;
+  const {
+    currentLocation,
+    currentVerseRef,
+    setCurrentLocation,
+    setShouldShowReferenceForm,
+  } = useContext(AppCtx)!;
 
   useScrollOnLocationChange(currentLocation, currentVerseRef);
 
@@ -59,11 +63,15 @@ export default function Book({ content, isHeadingInView }: BookProps) {
             [focused]: currentLocation.verseIndex === j,
           })}
           key={verse.id}
-          onClick={() => setCurrentLocation('verseIndex', j)}
+          onClick={() => {
+            setShouldShowReferenceForm(false);
+            setCurrentLocation('verseIndex', j);
+          }}
         >
           <b className={verseNumber}>
             {!isHeadingInView
-              ? `${currentLocation.chapterIndex + 1}:${j + 1}`
+              ? // TODO: Change separator based on the language.
+                `${currentLocation.chapterIndex + 1},${j + 1}`
               : j + 1}
           </b>
           {verse.text}
@@ -72,6 +80,7 @@ export default function Book({ content, isHeadingInView }: BookProps) {
     [
       currentLocation.verseIndex,
       currentVerseRef,
+      setShouldShowReferenceForm,
       setCurrentLocation,
       isHeadingInView,
       currentLocation.chapterIndex,

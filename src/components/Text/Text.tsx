@@ -6,6 +6,9 @@ import styles from './Text.module.css';
 
 const { title } = styles;
 
+/**
+ * For the gap to be consistent when the form is hidden.
+ */
 function useMarginBottom<T>(): [
   elementRef: React.MutableRefObject<(T & HTMLElement) | null>,
   elementMarginBottom: number,
@@ -28,11 +31,16 @@ function useMarginBottom<T>(): [
 
 export default function Text() {
   const { data, currentLocation } = useContext(AppCtx)!;
-  // NOTE: For the gap to be consistent when the form is hidden.
   const [headingRef, headingMarginBottom] =
     useMarginBottom<HTMLHeadingElement>();
+
+  const heightHeadingTextStartsAt = headingRef.current
+    ? parseFloat(getComputedStyle(headingRef.current).fontSize)
+    : 0;
+  const headingHeight = headingRef.current?.offsetHeight ?? 0;
+  const headingTextThreshold = heightHeadingTextStartsAt / headingHeight;
   const [isHeadingInView] = useInViewport(headingRef.current, {
-    threshold: 1,
+    threshold: headingTextThreshold,
   });
 
   if (!data) {
@@ -41,7 +49,7 @@ export default function Text() {
 
   const { name, content } = data[currentLocation.bookIndex];
 
-  // TODO: Handle name exception(s) (i.e., Psalms) more generically.
+  // TODO: Handle name exception(s) (i.e., Psalms) more generically (other languages).
   return (
     <div>
       <h2

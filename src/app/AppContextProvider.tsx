@@ -16,7 +16,12 @@ export interface CurrentLocation {
   verseIndex: number;
 }
 
-interface AppContext {
+interface AppContextProviderProps {
+  shouldShowReferenceForm: boolean;
+  setShouldShowReferenceForm: (value: boolean) => void;
+}
+
+interface AppContext extends AppContextProviderProps {
   data: Book[] | null;
   currentLocation: CurrentLocation;
   setCurrentLocation: (key: string, value: number) => void;
@@ -25,7 +30,11 @@ interface AppContext {
 
 export const AppCtx = createContext<AppContext | null>(null);
 
-export default function AppContextProvider({ children }: PropsWithChildren) {
+export default function AppContextProvider({
+  shouldShowReferenceForm,
+  setShouldShowReferenceForm,
+  children,
+}: PropsWithChildren<AppContextProviderProps>) {
   const { isLoading, data } = useQuery('books', () => fetchBook());
   const [currentLocation, _setCurrentLocation] = useState<CurrentLocation>({
     bookIndex: 42, // NOTE: John
@@ -49,8 +58,16 @@ export default function AppContextProvider({ children }: PropsWithChildren) {
       currentLocation,
       setCurrentLocation,
       currentVerseRef,
+      shouldShowReferenceForm,
+      setShouldShowReferenceForm,
     }),
-    [data, currentLocation, setCurrentLocation],
+    [
+      data,
+      currentLocation,
+      setCurrentLocation,
+      shouldShowReferenceForm,
+      setShouldShowReferenceForm,
+    ],
   );
 
   // TODO: Handle error.

@@ -3,11 +3,6 @@ import { AppCtx } from '@app/AppContextProvider';
 import { useEventListener, useInViewport } from 'ahooks';
 import styles from './ReferenceForm.module.css';
 
-interface ReferenceFormProps {
-  shouldShow: boolean;
-  setShouldShow: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
 const { container } = styles;
 
 function useInputFocus(
@@ -44,12 +39,15 @@ function useInputFocus(
   return inputRef;
 }
 
-export default function ReferenceForm({
-  shouldShow,
-  setShouldShow,
-}: ReferenceFormProps) {
-  const { data, currentLocation, setCurrentLocation, currentVerseRef } =
-    useContext(AppCtx)!;
+export default function ReferenceForm() {
+  const {
+    data,
+    currentLocation,
+    setCurrentLocation,
+    currentVerseRef,
+    shouldShowReferenceForm: shouldShow,
+    setShouldShowReferenceForm: setShouldShow,
+  } = useContext(AppCtx)!;
   const [isCurrentVerseInView] = useInViewport(currentVerseRef.current, {
     threshold: 1,
   });
@@ -72,6 +70,18 @@ export default function ReferenceForm({
     }
 
     setShouldShow(true);
+  });
+
+  useEventListener('click', (e) => {
+    if (
+      !inputRef.current ||
+      !currentVerseRef.current ||
+      inputRef.current.contains(e.target as Node)
+    ) {
+      return;
+    }
+
+    setShouldShow(false);
   });
 
   // TODO: Tidy it up.

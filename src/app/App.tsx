@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useEventListener } from 'ahooks';
+import { useEventListener, useDebounceFn } from 'ahooks';
 import ReferenceForm from '@components/ReferenceForm';
 import Text from '@components/Text';
 import AppContextProvider from './AppContextProvider';
@@ -10,8 +10,15 @@ import '../overwritten.css';
 const { container } = styles;
 
 export default function App() {
-  const [shouldShowReferenceForm, setShouldShowReferenceForm] = useState(true);
+  const [shouldShowReferenceForm, _setShouldShowReferenceForm] = useState(true);
   const [previousTopPos, setPreviousTopPos] = useState(0);
+
+  const { run: setShouldShowReferenceForm }: { run: (value: boolean) => void } =
+    useDebounceFn<(value: boolean) => void>(
+      (value) => _setShouldShowReferenceForm(value),
+      // NOTE: Half the animation duration.
+      { wait: 125 },
+    );
 
   useEventListener('scroll', () => {
     const currentTopPos = document.documentElement.scrollTop;
@@ -42,11 +49,11 @@ export default function App() {
   // TODO: Navigation etc.
   return (
     <div className={container}>
-      <AppContextProvider>
-        <ReferenceForm
-          shouldShow={shouldShowReferenceForm}
-          setShouldShow={setShouldShowReferenceForm}
-        />
+      <AppContextProvider
+        shouldShowReferenceForm={shouldShowReferenceForm}
+        setShouldShowReferenceForm={setShouldShowReferenceForm}
+      >
+        <ReferenceForm />
         <Text />
       </AppContextProvider>
     </div>

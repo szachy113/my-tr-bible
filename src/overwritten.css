@@ -1,4 +1,3 @@
-:root:not([data-theme='dark']),
 :root:not([data-theme='light']) {
   --primary: #fb8c00;
 }
@@ -6,6 +5,7 @@
 :root:not([data-theme='light']) form,
 :root:not([data-theme='light']) form input {
   background-color: rgba(14, 20, 25, calc(1 / 3));
+  backdrop-filter: blur(1px);
 }
 
 :root:not([data-theme='light']) form {
