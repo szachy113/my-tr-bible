@@ -53,8 +53,8 @@ export default function AppContextProvider({
     [],
   );
 
-  const value = useMemo<AppContext>(
-    () => ({
+  const value = useMemo(
+    (): AppContext => ({
       data: data ?? null,
       currentLocation,
       setCurrentLocation,

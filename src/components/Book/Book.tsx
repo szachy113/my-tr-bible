@@ -1,6 +1,7 @@
 import { Chapter } from '@utils/fetchBook';
 import { useContext, useEffect, useCallback } from 'react';
 import { CurrentLocation, AppCtx } from '@app/AppContextProvider';
+import scrollIntoView from 'scroll-into-view';
 import clsx from 'clsx';
 import styles from './Book.module.css';
 
@@ -27,20 +28,13 @@ function useScrollOnLocationChange(
       return;
     }
 
-    // FIXME: It doesn't center the verse properly.
-    const currentVerseRect = currentVerseRef.current.getBoundingClientRect();
-    const absoluteCurrentVerseTop = currentVerseRect.top + window.pageYOffset;
-    const center = absoluteCurrentVerseTop - window.innerHeight / 2;
-
-    window.scrollTo({
-      top: center,
-      behavior: 'smooth',
+    // TODO: Util extraction?
+    // WARNING: The native solution doesn't work properly in my case.
+    // NOTE: This one works even better (i.e., more accurate at the end).
+    scrollIntoView(currentVerseRef.current, {
+      // NOTE: Twice the form animation duration.
+      time: 500,
     });
-
-    // currentVerseRef.current.scrollIntoView({
-    //   behavior: 'smooth',
-    //   block: 'center',
-    // });
   }, [currentVerseRef, verseIndex]);
 }
 

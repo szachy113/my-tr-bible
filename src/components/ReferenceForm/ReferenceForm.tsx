@@ -1,6 +1,7 @@
 import { useRef, useContext, useCallback, useEffect } from 'react';
 import { AppCtx } from '@app/AppContextProvider';
 import { useEventListener, useInViewport } from 'ahooks';
+import scrollIntoView from 'scroll-into-view';
 import styles from './ReferenceForm.module.css';
 
 const { container } = styles;
@@ -157,9 +158,9 @@ export default function ReferenceForm() {
         return;
       }
 
-      currentVerseRef.current.scrollIntoView({
-        behavior: isCurrentVerseInView ? 'auto' : 'smooth',
-        block: 'center',
+      scrollIntoView(currentVerseRef.current, {
+        // NOTE: Twice the form animation duration.
+        time: isCurrentVerseInView ? 0 : 500,
       });
     },
     [
