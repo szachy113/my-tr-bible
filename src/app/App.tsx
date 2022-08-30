@@ -13,12 +13,13 @@ export default function App() {
   const [shouldShowReferenceForm, _setShouldShowReferenceForm] = useState(true);
   const [previousTopPos, setPreviousTopPos] = useState(0);
 
-  const { run: setShouldShowReferenceForm }: { run: (value: boolean) => void } =
-    useDebounceFn<(value: boolean) => void>(
-      (value) => _setShouldShowReferenceForm(value),
-      // NOTE: Half the animation duration.
-      { wait: 125 },
-    );
+  const { run: setShouldShowReferenceForm } = useDebounceFn<
+    (value: boolean) => void
+  >(
+    (value) => _setShouldShowReferenceForm(value),
+    // NOTE: Half the animation duration.
+    { wait: 125 },
+  );
 
   useEventListener('scroll', () => {
     const currentTopPos = document.documentElement.scrollTop;

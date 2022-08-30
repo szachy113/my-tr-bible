@@ -1,3 +1,4 @@
+import { DebouncedFunc } from 'lodash';
 import { Book, fetchBook } from '@utils/fetchBook';
 import {
   createContext,
@@ -18,7 +19,7 @@ export interface CurrentLocation {
 
 interface AppContextProviderProps {
   shouldShowReferenceForm: boolean;
-  setShouldShowReferenceForm: (value: boolean) => void;
+  setShouldShowReferenceForm: DebouncedFunc<(value: boolean) => void>;
 }
 
 interface AppContext extends AppContextProviderProps {
@@ -52,7 +53,7 @@ export default function AppContextProvider({
     [],
   );
 
-  const value = useMemo(
+  const value = useMemo<AppContext>(
     () => ({
       data: data ?? null,
       currentLocation,
