@@ -1,7 +1,8 @@
 import { Chapter } from '@utils/fetchBook';
-import { useContext, useEffect, useCallback } from 'react';
+import { useContext, useCallback } from 'react';
 import { CurrentLocation, AppCtx } from '@app/AppContextProvider';
-import scrollIntoView from 'scroll-into-view';
+import { useScrollCurrentVerseIntoView } from '@hooks/useScrollCurrentVerseIntoView';
+import { useTrackedEffect } from 'ahooks';
 import clsx from 'clsx';
 import styles from './Book.module.css';
 
@@ -17,25 +18,37 @@ const {
   focused,
 } = styles;
 
-function useScrollOnLocationChange(
-  { bookIndex, chapterIndex, verseIndex }: CurrentLocation,
-  currentVerseRef: React.MutableRefObject<HTMLParagraphElement | null>,
-): void {
-  useEffect(() => window.scrollTo(0, 0), [bookIndex, chapterIndex]);
+function useScrollOnLocationChange({
+  bookIndex,
+  chapterIndex,
+  verseIndex,
+}: CurrentLocation): void {
+  const scrollCurrentVerseIntoView = useScrollCurrentVerseIntoView();
 
-  useEffect(() => {
-    if (!currentVerseRef.current) {
-      return;
-    }
+  useTrackedEffect(
+    (changes, previousDeps, currentDeps) => {
+      if (!changes || !currentDeps) {
+        return;
+      }
 
-    // TODO: Util extraction?
-    // WARNING: The native solution doesn't work properly in my case.
-    // NOTE: This one works even better (i.e., more accurate at the end).
-    scrollIntoView(currentVerseRef.current, {
-      // NOTE: Twice the form animation duration.
-      time: 500,
-    });
-  }, [currentVerseRef, verseIndex]);
+      const didBookChange = previousDeps?.[0] !== currentDeps[0];
+      const didChapterChange = previousDeps?.[1] !== currentDeps[1];
+      const didVerseChange = previousDeps?.[2] !== currentDeps[2];
+
+      if (didBookChange || didChapterChange) {
+        window.scrollTo(0, 0);
+      }
+
+      if (
+        (!didBookChange && !didChapterChange && didVerseChange) ||
+        didBookChange ||
+        didChapterChange
+      ) {
+        scrollCurrentVerseIntoView();
+      }
+    },
+    [bookIndex, chapterIndex, verseIndex],
+  );
 }
 
 export default function Book({ content, isHeadingInView }: BookProps) {
@@ -46,7 +59,7 @@ export default function Book({ content, isHeadingInView }: BookProps) {
     setShouldShowReferenceForm,
   } = useContext(AppCtx)!;
 
-  useScrollOnLocationChange(currentLocation, currentVerseRef);
+  useScrollOnLocationChange(currentLocation);
 
   const renderChapter = useCallback<(chapter: Chapter) => JSX.Element[]>(
     (chapter) =>

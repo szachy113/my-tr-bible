@@ -1,7 +1,7 @@
 import { useRef, useContext, useCallback, useEffect } from 'react';
 import { AppCtx } from '@app/AppContextProvider';
-import { useEventListener, useInViewport } from 'ahooks';
-import scrollIntoView from 'scroll-into-view';
+import { useEventListener } from 'ahooks';
+import { useScrollCurrentVerseIntoView } from '@hooks/useScrollCurrentVerseIntoView';
 import styles from './ReferenceForm.module.css';
 
 const { container } = styles;
@@ -45,15 +45,12 @@ export default function ReferenceForm() {
     data,
     currentLocation,
     setCurrentLocation,
-    currentVerseRef,
     shouldShowReferenceForm: shouldShow,
     setShouldShowReferenceForm: setShouldShow,
   } = useContext(AppCtx)!;
-  const [isCurrentVerseInView] = useInViewport(currentVerseRef.current, {
-    threshold: 1,
-  });
   const containerRef = useRef<HTMLFormElement | null>(null);
   const inputRef = useInputFocus(shouldShow);
+  const scrollCurrentVerseIntoView = useScrollCurrentVerseIntoView();
 
   useEventListener('keydown', (e) => {
     const navigationKeys = ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft'];
@@ -74,11 +71,7 @@ export default function ReferenceForm() {
   });
 
   useEventListener('click', (e) => {
-    if (
-      !inputRef.current ||
-      !currentVerseRef.current ||
-      inputRef.current.contains(e.target as Node)
-    ) {
+    if (!inputRef.current || inputRef.current.contains(e.target as Node)) {
       return;
     }
 
@@ -151,25 +144,18 @@ export default function ReferenceForm() {
 
       setCurrentLocation('verseIndex', targetVerseIndex);
 
-      if (
-        targetVerseIndex !== currentLocation.verseIndex ||
-        !currentVerseRef.current
-      ) {
+      if (targetVerseIndex !== currentLocation.verseIndex) {
         return;
       }
 
-      scrollIntoView(currentVerseRef.current, {
-        // NOTE: Twice the form animation duration.
-        time: isCurrentVerseInView ? 0 : 500,
-      });
+      scrollCurrentVerseIntoView();
     },
     [
       data,
       setShouldShow,
       setCurrentLocation,
       currentLocation,
-      currentVerseRef,
-      isCurrentVerseInView,
+      scrollCurrentVerseIntoView,
     ],
   );
 
