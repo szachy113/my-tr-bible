@@ -1,20 +1,75 @@
-.container {
-  padding: 0.5em 1em;
+:root {
+  --container-padding-inline: 3em;
 }
 
-.verse-container {
+.container {
+  padding: 0.5em var(--container-padding-inline);
+}
+
+.verse-style {
+  --typography-spacing-vertical: 0;
+
   border: 1px dashed transparent;
   padding: 1ch;
+  list-style: none;
 }
 
-.verse-container:not(:last-child) {
+.verse-style:not(:last-child) {
   margin-bottom: 1ch;
+}
+
+.verse-content {
+  --typography-spacing-vertical: 0;
+
+  max-width: 70ch;
 }
 
 .verse-number {
   margin-right: 1ch;
 }
 
-.focused {
+.verse--focused {
   border: 1px solid var(--primary);
+}
+
+.list {
+  --spacing: 0;
+
+  padding-inline: 2ch;
+}
+
+@media (max-width: 768px) {
+  .list {
+    padding-inline: 0;
+  }
+}
+
+.arrow {
+  all: unset;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: var(--container-padding-inline);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.arrow--right {
+  right: 0;
+}
+
+.arrow--left {
+  left: 0;
+}
+
+@media (max-width: 475px) {
+  .arrow {
+    width: calc(var(--container-padding-inline) / 1.25);
+  }
+}
+
+.arrow-icon {
+  font-size: 2.25em;
+  color: inherit;
 }

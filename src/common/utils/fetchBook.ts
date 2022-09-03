@@ -1,7 +1,7 @@
 import { supabaseUrl } from '@app/supabaseClient';
 
 export type Verse = { id: string; text: string };
-export type Chapter = Verse[];
+export type Chapter = { id: string; content: Verse[] };
 export interface Book {
   name: string;
   abbr: string;
@@ -98,12 +98,13 @@ export async function fetchBook(
 
   const { name, abbr } = polishBooksNamesAndAbbreviations[id - 1];
   const chapters = (await res.json()) as string[][];
-  const content: Chapter[] = chapters.map((verses, i) =>
-    verses.map((text, j) => ({
+  const content: Chapter[] = chapters.map((verses, i) => ({
+    id: `${i}`,
+    content: verses.map((text, j) => ({
       id: `${i}${j}`,
       text,
     })),
-  );
+  }));
   const book: Book = {
     name,
     abbr,

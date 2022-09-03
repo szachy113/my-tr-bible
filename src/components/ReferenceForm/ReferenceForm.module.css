@@ -3,4 +3,5 @@
   position: fixed;
   top: 0;
   transition: transform 250ms ease-out;
+  z-index: 11;
 }

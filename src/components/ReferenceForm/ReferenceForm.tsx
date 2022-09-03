@@ -1,3 +1,4 @@
+import { DebouncedFunc } from 'lodash';
 import { useRef, useContext, useCallback, useEffect } from 'react';
 import { AppCtx } from '@app/AppContextProvider';
 import { useEventListener } from 'ahooks';
@@ -8,6 +9,7 @@ const { container } = styles;
 
 function useInputFocus(
   shouldShow: boolean,
+  setShouldShow: DebouncedFunc<(value: boolean) => void>,
 ): React.MutableRefObject<HTMLInputElement | null> {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -32,9 +34,22 @@ function useInputFocus(
       return;
     }
 
-    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-      inputRef.current.blur();
+    const scrollKeys = ['ArrowUp', 'ArrowDown'];
+
+    if (!scrollKeys.includes(e.key)) {
+      return;
     }
+
+    inputRef.current.blur();
+
+    if (e.key === 'ArrowUp') {
+      // TODO: Maybe reset a timeout?
+      setShouldShow(true);
+
+      return;
+    }
+
+    setShouldShow(false);
   });
 
   return inputRef;
@@ -49,13 +64,19 @@ export default function ReferenceForm() {
     setShouldShowReferenceForm: setShouldShow,
   } = useContext(AppCtx)!;
   const containerRef = useRef<HTMLFormElement | null>(null);
-  const inputRef = useInputFocus(shouldShow);
+  const inputRef = useInputFocus(shouldShow, setShouldShow);
   const scrollCurrentVerseIntoView = useScrollCurrentVerseIntoView();
 
   useEventListener('keydown', (e) => {
     const navigationKeys = ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft'];
 
-    if (navigationKeys.includes(e.key)) {
+    if (
+      navigationKeys.includes(e.key) ||
+      e.metaKey ||
+      e.altKey ||
+      e.ctrlKey ||
+      e.shiftKey
+    ) {
       return;
     }
 
@@ -79,6 +100,7 @@ export default function ReferenceForm() {
   });
 
   // TODO: Tidy it up.
+  // TODO: Throttle (?) (spam).
   const handleSubmit = useCallback<React.ChangeEventHandler<HTMLFormElement>>(
     (e) => {
       e.preventDefault();
@@ -136,10 +158,11 @@ export default function ReferenceForm() {
         return;
       }
 
-      const targetChapter = correspondingBook.content[targetChapterIndex];
+      const targetChapterContent =
+        correspondingBook.content[targetChapterIndex].content;
       const targetVerseIndex =
-        targetVerseNumber > targetChapter.length
-          ? targetChapter.length - 1
+        targetVerseNumber > targetChapterContent.length
+          ? targetChapterContent.length - 1
           : targetVerseNumber - 1;
 
       setCurrentLocation('verseIndex', targetVerseIndex);

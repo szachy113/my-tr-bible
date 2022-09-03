@@ -11,22 +11,27 @@ import {
 import { useQuery } from 'react-query';
 import Spinner from '@components/Spinner';
 
+interface AppContextProviderProps {
+  shouldShowReferenceForm: boolean;
+  setShouldShowReferenceForm: DebouncedFunc<(value: boolean) => void>;
+}
+
 export interface CurrentLocation {
   bookIndex: number;
   chapterIndex: number;
   verseIndex: number;
 }
 
-interface AppContextProviderProps {
-  shouldShowReferenceForm: boolean;
-  setShouldShowReferenceForm: DebouncedFunc<(value: boolean) => void>;
-}
+type SetCurrentLocation = (
+  key: keyof CurrentLocation,
+  value: number | ((prevState: number) => number),
+) => void;
 
 interface AppContext extends AppContextProviderProps {
   data: Book[] | null;
   currentLocation: CurrentLocation;
-  setCurrentLocation: (key: string, value: number) => void;
-  currentVerseRef: React.MutableRefObject<HTMLParagraphElement | null>;
+  setCurrentLocation: SetCurrentLocation;
+  currentVerseRef: React.MutableRefObject<HTMLLIElement | null>;
 }
 
 export const AppCtx = createContext<AppContext | null>(null);
@@ -42,13 +47,13 @@ export default function AppContextProvider({
     chapterIndex: 0,
     verseIndex: -1,
   });
-  const currentVerseRef = useRef<HTMLParagraphElement | null>(null);
+  const currentVerseRef = useRef<HTMLLIElement | null>(null);
 
-  const setCurrentLocation = useCallback<(key: string, value: number) => void>(
+  const setCurrentLocation = useCallback<SetCurrentLocation>(
     (key, value) =>
       _setCurrentLocation((prev) => ({
         ...prev,
-        [key]: value,
+        [key]: typeof value === 'function' ? value(prev[key]) : value,
       })),
     [],
   );
