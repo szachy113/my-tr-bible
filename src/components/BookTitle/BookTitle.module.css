@@ -3,12 +3,8 @@
   padding-inline: 3ch;
 }
 
-@media (max-width: 475px) {
+@media (max-width: 512px) {
   .title {
     padding-inline: 2.5ch;
   }
-}
-
-.title--no-reference-form {
-  margin-top: 1em;
 }

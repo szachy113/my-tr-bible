@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useEventListener, useDebounceFn } from 'ahooks';
 import ReferenceForm from '@components/ReferenceForm';
-import Text from '@components/Text';
+import Book from '@components/Book';
 import AppContextProvider from './AppContextProvider';
 import styles from './App.module.css';
 import '@picocss/pico';
@@ -55,7 +55,7 @@ export default function App() {
         setShouldShowReferenceForm={setShouldShowReferenceForm}
       >
         <ReferenceForm />
-        <Text />
+        <Book />
       </AppContextProvider>
     </div>
   );

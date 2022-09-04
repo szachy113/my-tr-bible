@@ -2,6 +2,6 @@
   width: 100%;
   position: fixed;
   top: 0;
-  transition: transform 250ms ease-out;
+  transition: transform var(--animation-duration) ease-out;
   z-index: 11;
 }

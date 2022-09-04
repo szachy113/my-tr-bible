@@ -1,6 +1,7 @@
 :root:not([data-theme='dark']),
 :root:not([data-theme='light']) {
   --primary: #fb8c00;
+  --animation-duration: 250ms;
 }
 
 form {
