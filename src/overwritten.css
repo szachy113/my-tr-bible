@@ -1,7 +1,10 @@
 :root:not([data-theme='dark']),
 :root:not([data-theme='light']) {
-  --primary: #fb8c00;
+  --primary: rgb(249, 137, 0);
+  --primary-focus: rgba(249, 137, 0, 0.25);
+
   --animation-duration: 250ms;
+  --spinner-size: 3em;
 }
 
 form {

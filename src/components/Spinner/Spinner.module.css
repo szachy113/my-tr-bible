@@ -2,15 +2,10 @@
   height: 100vh;
   display: grid;
   place-items: center;
+
+  position: relative;
 }
 
 .spinner {
-  font-size: 3em;
-  animation: rotate 1.5s linear infinite;
-}
-
-@keyframes rotate {
-  to {
-    transform: rotate(360deg);
-  }
+  font-size: var(--spinner-size);
 }

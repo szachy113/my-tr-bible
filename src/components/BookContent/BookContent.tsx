@@ -1,7 +1,7 @@
 import { Chapter } from '@utils/fetchBook';
 import { useContext, useCallback, useRef, useMemo } from 'react';
 import { CurrentLocation, AppCtx } from '@app/AppContextProvider';
-import { useMediaQuery } from 'react-responsive';
+import isMobile from 'ismobilejs';
 import { useScrollCurrentVerseIntoView } from '@hooks/useScrollCurrentVerseIntoView';
 import { useEventListener, useTrackedEffect } from 'ahooks';
 import { FontAwesomeIcon as Icon } from '@fortawesome/react-fontawesome';
@@ -83,9 +83,7 @@ export default function BookContent({
     [data, currentLocation.bookIndex],
   );
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const isDesktop = useMediaQuery({
-    query: '(min-width: 1024px)',
-  });
+  const isDesktop = !isMobile().any;
 
   useScrollOnLocationChange(currentLocation);
 
