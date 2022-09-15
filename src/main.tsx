@@ -13,6 +13,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
         <Routes>
           <Route path="/" element={<App />} />
           <Route path="/:language" element={<App />} />
+          <Route path="/:language/:version" element={<App />} />
         </Routes>
       </Router>
     </QueryClientProvider>

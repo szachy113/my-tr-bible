@@ -1,5 +1,5 @@
 import { DebouncedFunc } from 'lodash';
-import { Book, fetchBook } from '@utils/fetchBook';
+import { Book, fetchBooks } from '@utils/fetchBooks';
 import {
   createContext,
   PropsWithChildren,
@@ -8,6 +8,8 @@ import {
   useMemo,
   useRef,
 } from 'react';
+import { useParams } from 'react-router-dom';
+import { LanguageCode } from 'iso-639-1';
 import { useQuery } from 'react-query';
 import Spinner from '@components/Spinner';
 
@@ -32,6 +34,7 @@ interface AppContext extends AppContextProviderProps {
   currentLocation: CurrentLocation;
   setCurrentLocation: SetCurrentLocation;
   currentVerseRef: React.MutableRefObject<HTMLLIElement | null>;
+  language: LanguageCode;
 }
 
 export const AppCtx = createContext<AppContext | null>(null);
@@ -41,7 +44,19 @@ export default function AppContextProvider({
   setShouldShowReferenceForm,
   children,
 }: PropsWithChildren<AppContextProviderProps>) {
-  const { isLoading, data } = useQuery('books', () => fetchBook());
+  const params = useParams() as {
+    language?: LanguageCode;
+    version?: string;
+  };
+  // TODO: Default language should be based on user's browser preferences.
+  const language = useMemo(() => params.language ?? 'en', [params.language]);
+  const { isLoading, data } = useQuery('books', () =>
+    fetchBooks({
+      language,
+      version: params.version,
+    }),
+  );
+
   const [currentLocation, _setCurrentLocation] = useState<CurrentLocation>({
     bookIndex: 42, // NOTE: John
     chapterIndex: 0,
@@ -66,6 +81,7 @@ export default function AppContextProvider({
       currentVerseRef,
       shouldShowReferenceForm,
       setShouldShowReferenceForm,
+      language,
     }),
     [
       data,
@@ -73,13 +89,14 @@ export default function AppContextProvider({
       setCurrentLocation,
       shouldShowReferenceForm,
       setShouldShowReferenceForm,
+      language,
     ],
   );
 
   // TODO: Handle error.
 
   if (isLoading) {
-    return <Spinner />;
+    return <Spinner language={language} />;
   }
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;

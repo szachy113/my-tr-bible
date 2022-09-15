@@ -1,6 +1,5 @@
 import { useContext, useRef, useCallback } from 'react';
 import { AppCtx } from '@app/AppContextProvider';
-import { useInViewport } from 'ahooks';
 import { useSwipeable } from 'react-swipeable';
 import BookTitle from '@components/BookTitle';
 import BookContent from '@components/BookContent';
@@ -13,15 +12,8 @@ export default function Book() {
     setCurrentLocation,
   } = useContext(AppCtx)!;
 
+  const headerRef = useRef<HTMLDivElement | null>(null);
   const headingRef = useRef<HTMLHeadingElement | null>(null);
-  const heightHeadingTextStartsAt = headingRef.current
-    ? parseFloat(getComputedStyle(headingRef.current).fontSize)
-    : 0;
-  const headingHeight = headingRef.current?.offsetHeight ?? 0;
-  const headingTextThreshold = heightHeadingTextStartsAt / headingHeight;
-  const [isHeadingInView] = useInViewport(headingRef.current, {
-    threshold: headingTextThreshold,
-  });
 
   const selectChapter = useCallback<
     ({ previous, next }: { previous?: boolean; next?: boolean }) => void
@@ -88,11 +80,13 @@ export default function Book() {
     onSwipedLeft: () => selectChapter({ next: true }),
   });
 
+  // TODO: Context for the refs?
   return (
     <div {...swipeHandlers}>
-      <BookTitle headingRef={headingRef} />
+      <BookTitle headerRef={headerRef} headingRef={headingRef} />
       <BookContent
-        isHeadingInView={isHeadingInView}
+        headerRef={headerRef}
+        headingRef={headingRef}
         selectChapter={selectChapter}
       />
     </div>

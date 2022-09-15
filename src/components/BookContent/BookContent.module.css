@@ -34,6 +34,7 @@
   --typography-spacing-vertical: 0;
 
   max-width: 70ch;
+  display: flex;
 }
 
 .verse-number {
@@ -42,6 +43,15 @@
 
 .verse--focused {
   border: 1px solid var(--primary);
+}
+
+.verse--extra {
+  --typography-spacing-vertical: 0;
+
+  display: block;
+  font-size: 0.9em;
+  font-weight: initial;
+  max-width: 50ch;
 }
 
 .list {

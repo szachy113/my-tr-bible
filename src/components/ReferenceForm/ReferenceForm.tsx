@@ -107,7 +107,8 @@ export default function ReferenceForm() {
       setShouldShow(false);
 
       const input = e.target[0] as HTMLInputElement;
-      const [book, chapter, verse] = input.value.split(/[\s|,|:|.]/g);
+      const [book, chapter, verse] = input.value.trim().split(/[\s|,|:|.]/g);
+
       const targetBook = book?.toLowerCase();
 
       if (!data || !targetBook) {
@@ -115,7 +116,7 @@ export default function ReferenceForm() {
       }
 
       const correspondingBookIndex = data.findIndex(
-        ({ abbr }) => abbr.toLowerCase() === targetBook,
+        ({ abbreviation }) => abbreviation.toLowerCase() === targetBook,
       );
 
       if (correspondingBookIndex < 0) {
@@ -160,10 +161,29 @@ export default function ReferenceForm() {
 
       const targetChapterContent =
         correspondingBook.content[targetChapterIndex].content;
-      const targetVerseIndex =
-        targetVerseNumber > targetChapterContent.length
-          ? targetChapterContent.length - 1
-          : targetVerseNumber - 1;
+
+      let targetVerseIndex = targetVerseNumber - 1;
+
+      if (targetVerseNumber > targetChapterContent.length) {
+        targetVerseIndex = targetChapterContent.length - 1;
+      }
+
+      const isPsalm = targetBook === 'ps';
+
+      if (targetVerseNumber < targetChapterContent.length && isPsalm) {
+        const extraVersesCount = targetChapterContent.reduce(
+          (total, curr) =>
+            curr.content.every((word) => word.content.startsWith('<i>'))
+              ? total + 1
+              : total,
+          0,
+        );
+        const hasExtraVerse = extraVersesCount > 0;
+
+        if (hasExtraVerse) {
+          targetVerseIndex += extraVersesCount;
+        }
+      }
 
       setCurrentLocation('verseIndex', targetVerseIndex);
 

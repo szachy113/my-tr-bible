@@ -1,10 +1,12 @@
-.title {
+.container {
   text-align: center;
   padding-inline: 3ch;
+  display: grid;
+  place-items: center;
 }
 
 @media (max-width: 512px) {
-  .title {
+  .container {
     padding-inline: 2.5ch;
   }
 }

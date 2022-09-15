@@ -1,16 +1,18 @@
-import { Chapter } from '@utils/fetchBook';
-import { useContext, useCallback, useRef, useMemo } from 'react';
+import { Chapter, Verse, Word } from '@utils/fetchBooks';
+import { useContext, useCallback, useMemo, useRef } from 'react';
 import { CurrentLocation, AppCtx } from '@app/AppContextProvider';
 import isMobile from 'ismobilejs';
 import { useScrollCurrentVerseIntoView } from '@hooks/useScrollCurrentVerseIntoView';
-import { useEventListener, useTrackedEffect } from 'ahooks';
+import { useEventListener, useInViewport, useTrackedEffect } from 'ahooks';
+import { createPortal } from 'react-dom';
 import { FontAwesomeIcon as Icon } from '@fortawesome/react-fontawesome';
 import { faAngleRight, faAngleLeft } from '@fortawesome/free-solid-svg-icons';
 import clsx from 'clsx';
 import styles from './BookContent.module.css';
 
 interface BookContentProps {
-  isHeadingInView: boolean | undefined;
+  headerRef: React.MutableRefObject<HTMLDivElement | null>;
+  headingRef: React.MutableRefObject<HTMLHeadingElement | null>;
   selectChapter: ({
     previous,
     next,
@@ -24,8 +26,9 @@ const {
   container,
   'verse-style': verseStyle,
   'verse-content': verseContent,
-  'verse-number': verseNumber,
-  'verse--focused': focused,
+  'verse-number': verseNumberStyle,
+  'verse--focused': verseFocused,
+  'verse--extra': verseExtra,
   list,
   arrow,
   'arrow--right': arrowRight,
@@ -66,8 +69,24 @@ function useScrollOnLocationChange({
   );
 }
 
+const isExtraWord = (word: Word) => word.content.startsWith('<i>');
+
+const renderVerse = (verse: Verse): (string | JSX.Element)[] =>
+  verse.content.map((word) => {
+    const wordToRender = `${word.content} `;
+
+    if (word.content.startsWith('<i>')) {
+      // NOTE: Don't use dangerouslySetInnerHTML attribute.
+
+      return <i key={word.id}>{wordToRender.replace(/<i>|<\/i>/g, '')}</i>;
+    }
+
+    return wordToRender;
+  });
+
 export default function BookContent({
-  isHeadingInView,
+  headerRef,
+  headingRef,
   selectChapter,
 }: BookContentProps) {
   const {
@@ -76,7 +95,7 @@ export default function BookContent({
     currentVerseRef,
     setCurrentLocation,
     shouldShowReferenceForm,
-    setShouldShowReferenceForm,
+    language,
   } = useContext(AppCtx)!;
   const content = useMemo<Chapter[]>(
     () => data?.[currentLocation.bookIndex].content ?? [],
@@ -84,41 +103,93 @@ export default function BookContent({
   );
   const containerRef = useRef<HTMLDivElement | null>(null);
   const isDesktop = !isMobile().any;
+  const heightHeadingTextStartsAt = headingRef.current
+    ? parseFloat(getComputedStyle(headingRef.current).fontSize)
+    : 0;
+  const headingHeight = headingRef.current?.offsetHeight ?? 0;
+  const headingTextThreshold = heightHeadingTextStartsAt / headingHeight;
+  const [isHeadingInView] = useInViewport(headingRef.current, {
+    threshold: headingTextThreshold,
+  });
 
   useScrollOnLocationChange(currentLocation);
 
-  const renderChapter = useCallback<(chapter: Chapter) => JSX.Element[]>(
-    (chapter) =>
-      chapter.content.map((verse, j) => (
-        <li
-          ref={currentLocation.verseIndex === j ? currentVerseRef : null}
-          className={clsx(verseStyle, {
-            [focused]: currentLocation.verseIndex === j,
-          })}
-          key={verse.id}
-          onClick={() => {
-            setShouldShowReferenceForm(false);
-            setCurrentLocation('verseIndex', j);
-          }}
-        >
-          <p className={verseContent}>
-            <b className={verseNumber}>
-              {!isHeadingInView
-                ? // TODO: Change separator based on the language.
-                  `${currentLocation.chapterIndex + 1},${j + 1}`
-                : j + 1}
-            </b>
-            {verse.text}
-          </p>
-        </li>
-      )),
+  const renderChapter = useCallback<
+    (chapter: Chapter) => (JSX.Element | null)[]
+  >(
+    (chapter) => {
+      const isPsalm = currentLocation.bookIndex === 18;
+      const verseSeparator = ['pl'].includes(language) ? ',' : ':';
+
+      let extraVersesCount = 0;
+      let didRenderExtraVerses = false;
+
+      return chapter.content.map((verse, j) => {
+        if (isPsalm) {
+          const isExtraVerse = verse.content.every(isExtraWord);
+
+          if (isExtraVerse) {
+            if (didRenderExtraVerses) {
+              return null;
+            }
+
+            if (headerRef.current) {
+              extraVersesCount += 1;
+
+              // NOTE: There probably won't be more than two extra verses.
+              const nextVerse = chapter.content[j + 1];
+              const isNextVerseExtra = nextVerse.content.every(isExtraWord);
+
+              if (isNextVerseExtra) {
+                extraVersesCount += 1;
+              }
+
+              didRenderExtraVerses = true;
+
+              return createPortal(
+                <h3 className={verseExtra}>
+                  {renderVerse(verse)}
+                  {isNextVerseExtra && renderVerse(nextVerse)}
+                </h3>,
+                headerRef.current,
+              );
+            }
+          }
+        }
+
+        const verseNumber =
+          extraVersesCount > 0 ? j + 1 - extraVersesCount : j + 1;
+
+        return (
+          <li
+            ref={currentLocation.verseIndex === j ? currentVerseRef : null}
+            className={clsx(verseStyle, {
+              [verseFocused]: currentLocation.verseIndex === j,
+            })}
+            key={verse.id}
+            onClick={() => setCurrentLocation('verseIndex', j)}
+          >
+            <div className={verseContent}>
+              <b className={verseNumberStyle}>
+                {!isHeadingInView
+                  ? `${
+                      currentLocation.chapterIndex + 1
+                    }${verseSeparator}${verseNumber}`
+                  : verseNumber}
+              </b>
+              <p>{renderVerse(verse)}</p>
+            </div>
+          </li>
+        );
+      });
+    },
     [
-      currentLocation.verseIndex,
+      language,
+      currentLocation,
+      headerRef,
       currentVerseRef,
-      setShouldShowReferenceForm,
       setCurrentLocation,
       isHeadingInView,
-      currentLocation.chapterIndex,
     ],
   );
 
@@ -167,19 +238,17 @@ export default function BookContent({
   return (
     <div ref={containerRef} className={container}>
       {isDesktop && renderChapterArrow('left')}
-      {currentLocation.chapterIndex >= content.length
-        ? renderChapter(content[content.length - 1])
-        : content.map((chapter, i) => {
-            if (i !== currentLocation.chapterIndex) {
-              return null;
-            }
+      {content.map((chapter, i) => {
+        if (i !== currentLocation.chapterIndex) {
+          return null;
+        }
 
-            return (
-              <ul className={list} key={chapter.id}>
-                {renderChapter(chapter)}
-              </ul>
-            );
-          })}
+        return (
+          <ul className={list} key={chapter.id}>
+            {renderChapter(chapter)}
+          </ul>
+        );
+      })}
       {isDesktop && renderChapterArrow('right')}
     </div>
   );
