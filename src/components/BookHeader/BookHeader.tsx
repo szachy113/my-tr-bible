@@ -1,37 +1,16 @@
-import { useState, useEffect, useContext } from 'react';
+import { useContext } from 'react';
 import { AppCtx } from '@app/AppContextProvider';
-import styles from './BookTitle.module.css';
+import { useMarginBottom } from '@hooks/useMarginBottom';
+import styles from './BookHeader.module.css';
 
-interface BookTitleProps {
+interface BookHeaderProps {
   headerRef: React.MutableRefObject<HTMLDivElement | null>;
   headingRef: React.MutableRefObject<HTMLHeadingElement | null>;
 }
 
 const { container } = styles;
 
-/**
- * For the gap to be consistent with Pico.css.
- */
-function useMarginBottom<T>(
-  elementRef: React.MutableRefObject<(T & HTMLElement) | null>,
-): number {
-  const [elementMarginBottom, setElementMarginBottom] = useState(0);
-
-  useEffect(() => {
-    if (!elementRef.current) {
-      return;
-    }
-
-    const { marginBottom } = getComputedStyle(elementRef.current);
-
-    setElementMarginBottom(parseFloat(marginBottom));
-  }, [elementRef]);
-
-  return elementMarginBottom;
-}
-
-// TODO: BookHeader.
-export default function BookTitle({ headerRef, headingRef }: BookTitleProps) {
+export default function BookHeader({ headerRef, headingRef }: BookHeaderProps) {
   const { data, currentLocation } = useContext(AppCtx)!;
   const headingMarginBottom = useMarginBottom<HTMLHeadingElement>(headingRef);
 

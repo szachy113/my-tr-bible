@@ -1,9 +1,10 @@
-import { Chapter, Verse, Word } from '@utils/fetchBooks';
+import { Chapter, Verse } from '@utils/fetchBooks';
 import { useContext, useCallback, useMemo, useRef } from 'react';
 import { CurrentLocation, AppCtx } from '@app/AppContextProvider';
 import isMobile from 'ismobilejs';
 import { useScrollCurrentVerseIntoView } from '@hooks/useScrollCurrentVerseIntoView';
 import { useEventListener, useInViewport, useTrackedEffect } from 'ahooks';
+import { useMarginBottom } from '@hooks/useMarginBottom';
 import { createPortal } from 'react-dom';
 import { FontAwesomeIcon as Icon } from '@fortawesome/react-fontawesome';
 import { faAngleRight, faAngleLeft } from '@fortawesome/free-solid-svg-icons';
@@ -11,6 +12,7 @@ import clsx from 'clsx';
 import styles from './BookContent.module.css';
 
 interface BookContentProps {
+  parentRef: React.MutableRefObject<HTMLDivElement | null>;
   headerRef: React.MutableRefObject<HTMLDivElement | null>;
   headingRef: React.MutableRefObject<HTMLHeadingElement | null>;
   selectChapter: ({
@@ -69,7 +71,8 @@ function useScrollOnLocationChange({
   );
 }
 
-const isExtraWord = (word: Word) => word.content.startsWith('<i>');
+const isExtraVerse = (verse: Verse): boolean =>
+  verse.content.every((word) => word.content.startsWith('<i>'));
 
 const renderVerse = (verse: Verse): (string | JSX.Element)[] =>
   verse.content.map((word) => {
@@ -85,6 +88,7 @@ const renderVerse = (verse: Verse): (string | JSX.Element)[] =>
   });
 
 export default function BookContent({
+  parentRef,
   headerRef,
   headingRef,
   selectChapter,
@@ -111,6 +115,7 @@ export default function BookContent({
   const [isHeadingInView] = useInViewport(headingRef.current, {
     threshold: headingTextThreshold,
   });
+  const headingMarginBottom = useMarginBottom<HTMLHeadingElement>(headingRef);
 
   useScrollOnLocationChange(currentLocation);
 
@@ -119,16 +124,19 @@ export default function BookContent({
   >(
     (chapter) => {
       const isPsalm = currentLocation.bookIndex === 18;
-      const verseSeparator = ['pl'].includes(language) ? ',' : ':';
+      const verseSeparator = /pl/g.test(language) ? ',' : ':';
 
       let extraVersesCount = 0;
       let didRenderExtraVerses = false;
 
+      const isPaulineEpistle =
+        /44|45|46|47|48|49|50|51|52|53|54|56|57|58/g.test(
+          currentLocation.bookIndex.toString(),
+        );
+
       return chapter.content.map((verse, j) => {
         if (isPsalm) {
-          const isExtraVerse = verse.content.every(isExtraWord);
-
-          if (isExtraVerse) {
+          if (isExtraVerse(verse)) {
             if (didRenderExtraVerses) {
               return null;
             }
@@ -138,7 +146,7 @@ export default function BookContent({
 
               // NOTE: There probably won't be more than two extra verses.
               const nextVerse = chapter.content[j + 1];
-              const isNextVerseExtra = nextVerse.content.every(isExtraWord);
+              const isNextVerseExtra = isExtraVerse(nextVerse);
 
               if (isNextVerseExtra) {
                 extraVersesCount += 1;
@@ -154,6 +162,22 @@ export default function BookContent({
                 headerRef.current,
               );
             }
+          }
+        }
+
+        const isLastVerse = j === chapter.content.length - 1;
+
+        if (isLastVerse && isPaulineEpistle && parentRef.current) {
+          if (isExtraVerse(verse)) {
+            return createPortal(
+              <h3
+                className={verseExtra}
+                style={{ marginBottom: headingMarginBottom }}
+              >
+                {renderVerse(verse)}
+              </h3>,
+              parentRef.current,
+            );
           }
         }
 
@@ -187,6 +211,8 @@ export default function BookContent({
       language,
       currentLocation,
       headerRef,
+      parentRef,
+      headingMarginBottom,
       currentVerseRef,
       setCurrentLocation,
       isHeadingInView,

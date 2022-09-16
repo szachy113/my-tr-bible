@@ -164,13 +164,23 @@ export default function ReferenceForm() {
 
       let targetVerseIndex = targetVerseNumber - 1;
 
-      if (targetVerseNumber > targetChapterContent.length) {
+      const isPaulineEpistle =
+        /44|45|46|47|48|49|50|51|52|53|54|56|57|58/g.test(
+          correspondingBookIndex.toString(),
+        );
+
+      if (targetVerseNumber >= targetChapterContent.length) {
         targetVerseIndex = targetChapterContent.length - 1;
+
+        if (isPaulineEpistle) {
+          targetVerseIndex -= 1;
+        }
       }
 
-      const isPsalm = targetBook === 'ps';
+      const isPsalm = correspondingBookIndex === 18;
 
       if (targetVerseNumber < targetChapterContent.length && isPsalm) {
+        // TODO: Should be shared by some context!!
         const extraVersesCount = targetChapterContent.reduce(
           (total, curr) =>
             curr.content.every((word) => word.content.startsWith('<i>'))

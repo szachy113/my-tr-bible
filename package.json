@@ -6,8 +6,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "format": "prettier --config .prettierrc 'src/**/*.{ts,tsx,css,md,json}' --write",
-    "lint": "eslint src/**/*.{ts,tsx}",
+    "format": "prettier --config .prettierrc './src/**/*.{ts,tsx,css,md,json}' --write",
+    "lint": "eslint ./src/**/*.{ts,tsx}",
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
