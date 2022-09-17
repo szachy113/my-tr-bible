@@ -130,9 +130,7 @@ export default function BookContent({
       let didRenderExtraVerses = false;
 
       const isPaulineEpistle =
-        /44|45|46|47|48|49|50|51|52|53|54|56|57|58/g.test(
-          currentLocation.bookIndex.toString(),
-        );
+        currentLocation.bookIndex >= 44 && currentLocation.bookIndex <= 58;
 
       return chapter.content.map((verse, j) => {
         if (isPsalm) {

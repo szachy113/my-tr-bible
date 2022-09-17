@@ -104,43 +104,50 @@ export default function ReferenceForm() {
   const handleSubmit = useCallback<React.ChangeEventHandler<HTMLFormElement>>(
     (e) => {
       e.preventDefault();
-      setShouldShow(false);
 
       const input = e.target[0] as HTMLInputElement;
-      const [book, chapter, verse] = input.value.trim().split(/[\s|,|:|.]/g);
+      const trimmedInputValue = input.value.trim();
 
-      const targetBook = book?.toLowerCase();
+      input.value = trimmedInputValue;
 
-      if (!data || !targetBook) {
+      const [bookInput, chapterInput, verseInput] =
+        trimmedInputValue.split(/[\s|,|:|.]/g);
+
+      if (!data || !bookInput) {
         return;
       }
 
-      const correspondingBookIndex = data.findIndex(
-        ({ abbreviation }) => abbreviation.toLowerCase() === targetBook,
+      const targetBookIndex = data.findIndex(
+        ({ abbreviation }) =>
+          abbreviation.toLowerCase() === bookInput.toLowerCase(),
       );
 
-      if (correspondingBookIndex < 0) {
+      if (targetBookIndex < 0) {
         return;
       }
 
-      setCurrentLocation('bookIndex', correspondingBookIndex);
+      setShouldShow(false);
+      setCurrentLocation('bookIndex', targetBookIndex);
 
-      const targetChapterNumber = Number(chapter);
-      const correspondingBook = data[correspondingBookIndex];
+      const targetChapterNumber = Number(chapterInput);
+      const targetBook = data[targetBookIndex];
+
       const targetChapterIndex =
-        targetChapterNumber > correspondingBook.content.length
-          ? correspondingBook.content.length - 1
+        targetChapterNumber > targetBook.content.length
+          ? targetBook.content.length - 1
           : targetChapterNumber - 1;
 
       if (
-        (correspondingBookIndex === currentLocation.bookIndex ||
+        ((targetBookIndex === currentLocation.bookIndex && !chapterInput) ||
           targetChapterIndex === currentLocation.chapterIndex) &&
-        !verse
+        !verseInput
       ) {
         window.scrollTo({
           top: 0,
           behavior: 'smooth',
         });
+
+        return;
       }
 
       if (!targetChapterNumber) {
@@ -151,7 +158,7 @@ export default function ReferenceForm() {
 
       setCurrentLocation('chapterIndex', targetChapterIndex);
 
-      const targetVerseNumber = Number(verse);
+      const targetVerseNumber = Number(verseInput);
 
       if (!targetVerseNumber) {
         setCurrentLocation('verseIndex', -1);
@@ -159,39 +166,44 @@ export default function ReferenceForm() {
         return;
       }
 
-      const targetChapterContent =
-        correspondingBook.content[targetChapterIndex].content;
+      const targetChapter = targetBook.content[targetChapterIndex];
 
-      let targetVerseIndex = targetVerseNumber - 1;
+      let targetVerseIndex =
+        targetVerseNumber > targetChapter.content.length
+          ? targetChapter.content.length - 1
+          : targetVerseNumber - 1;
 
-      const isPaulineEpistle =
-        /44|45|46|47|48|49|50|51|52|53|54|56|57|58/g.test(
-          correspondingBookIndex.toString(),
-        );
+      const isLastChapter =
+        targetChapterIndex === targetBook.content.length - 1;
+      const isLastVerse = targetVerseIndex === targetChapter.content.length - 1;
+      const isPaulineEpistle = targetBookIndex >= 44 && targetBookIndex <= 58;
 
-      if (targetVerseNumber >= targetChapterContent.length) {
-        targetVerseIndex = targetChapterContent.length - 1;
-
-        if (isPaulineEpistle) {
-          targetVerseIndex -= 1;
-        }
+      if (isLastChapter && isLastVerse && isPaulineEpistle) {
+        targetVerseIndex -= 1;
       }
 
-      const isPsalm = correspondingBookIndex === 18;
+      const isPsalm = targetBookIndex === 18;
 
-      if (targetVerseNumber < targetChapterContent.length && isPsalm) {
+      if (!isLastVerse && isPsalm) {
         // TODO: Should be shared by some context!!
-        const extraVersesCount = targetChapterContent.reduce(
+        // NOTE: Since there won't be more than two extra verses.
+        const firstTwoVerses = targetChapter.content.slice(0, 2);
+        const extraVersesCount = firstTwoVerses.reduce(
           (total, curr) =>
             curr.content.every((word) => word.content.startsWith('<i>'))
               ? total + 1
               : total,
           0,
         );
-        const hasExtraVerse = extraVersesCount > 0;
+        const hasExtraVerses = extraVersesCount > 0;
 
-        if (hasExtraVerse) {
-          targetVerseIndex += extraVersesCount;
+        if (hasExtraVerses) {
+          const isInExtraVersesRange =
+            targetVerseIndex >= targetChapter.content.length - extraVersesCount;
+
+          targetVerseIndex += isInExtraVersesRange
+            ? targetChapter.content.length - targetVerseNumber
+            : extraVersesCount;
         }
       }
 
