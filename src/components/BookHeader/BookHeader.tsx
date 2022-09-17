@@ -1,17 +1,14 @@
 import { useContext } from 'react';
-import { AppCtx } from '@app/AppContextProvider';
+import { AppCtx } from '@app/ContextProvider';
 import { useMarginBottom } from '@hooks/useMarginBottom';
+import { BookCtx } from '@components/Book/ContextProvider';
 import styles from './BookHeader.module.css';
-
-interface BookHeaderProps {
-  headerRef: React.MutableRefObject<HTMLDivElement | null>;
-  headingRef: React.MutableRefObject<HTMLHeadingElement | null>;
-}
 
 const { container } = styles;
 
-export default function BookHeader({ headerRef, headingRef }: BookHeaderProps) {
+export default function BookHeader() {
   const { data, currentLocation } = useContext(AppCtx)!;
+  const { headingRef, headerRef } = useContext(BookCtx)!;
   const headingMarginBottom = useMarginBottom<HTMLHeadingElement>(headingRef);
 
   if (!data) {

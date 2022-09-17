@@ -1,5 +1,5 @@
 import { useContext, useCallback } from 'react';
-import { AppCtx } from '@app/AppContextProvider';
+import { AppCtx } from '@app/ContextProvider';
 import scrollIntoView from 'scroll-into-view';
 
 type ScrollCurrentVerseIntoViewCallback = (

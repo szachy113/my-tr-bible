@@ -13,7 +13,7 @@ import { LanguageCode } from 'iso-639-1';
 import { useQuery } from 'react-query';
 import Spinner from '@components/Spinner';
 
-interface AppContextProviderProps {
+interface ContextProviderProps {
   shouldShowReferenceForm: boolean;
   setShouldShowReferenceForm: DebouncedFunc<(value: boolean) => void>;
 }
@@ -22,14 +22,15 @@ export interface CurrentLocation {
   bookIndex: number;
   chapterIndex: number;
   verseIndex: number;
+  chapterExtraVersesCount: number;
 }
 
-type SetCurrentLocation = (
+export type SetCurrentLocation = (
   key: keyof CurrentLocation,
   value: number | ((prevState: number) => number),
 ) => void;
 
-interface AppContext extends AppContextProviderProps {
+interface AppContext extends ContextProviderProps {
   data: Book[] | null;
   currentLocation: CurrentLocation;
   setCurrentLocation: SetCurrentLocation;
@@ -39,11 +40,11 @@ interface AppContext extends AppContextProviderProps {
 
 export const AppCtx = createContext<AppContext | null>(null);
 
-export default function AppContextProvider({
+export default function ContextProvider({
   shouldShowReferenceForm,
   setShouldShowReferenceForm,
   children,
-}: PropsWithChildren<AppContextProviderProps>) {
+}: PropsWithChildren<ContextProviderProps>) {
   const params = useParams() as {
     language?: LanguageCode;
     version?: string;
@@ -61,6 +62,7 @@ export default function AppContextProvider({
     bookIndex: 42, // NOTE: John
     chapterIndex: 0,
     verseIndex: -1,
+    chapterExtraVersesCount: 0,
   });
   const currentVerseRef = useRef<HTMLLIElement | null>(null);
 

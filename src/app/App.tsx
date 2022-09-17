@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useEventListener, useDebounceFn } from 'ahooks';
 import ReferenceForm from '@components/ReferenceForm';
 import Book from '@components/Book';
-import AppContextProvider from './AppContextProvider';
+import ContextProvider from './ContextProvider';
 import styles from './App.module.css';
 import '@picocss/pico';
 import '../overwritten.css';
@@ -50,13 +50,13 @@ export default function App() {
   // TODO: Navigation etc.
   return (
     <div className={container}>
-      <AppContextProvider
+      <ContextProvider
         shouldShowReferenceForm={shouldShowReferenceForm}
         setShouldShowReferenceForm={setShouldShowReferenceForm}
       >
         <ReferenceForm />
         <Book />
-      </AppContextProvider>
+      </ContextProvider>
     </div>
   );
 }

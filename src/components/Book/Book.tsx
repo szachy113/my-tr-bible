@@ -1,8 +1,9 @@
 import { useContext, useRef, useCallback } from 'react';
-import { AppCtx } from '@app/AppContextProvider';
+import { AppCtx } from '@app/ContextProvider';
 import { useSwipeable } from 'react-swipeable';
 import BookHeader from '@components/BookHeader';
 import BookContent from '@components/BookContent';
+import ContextProvider from './ContextProvider';
 import styles from './Book.module.css';
 
 const { container } = styles;
@@ -15,8 +16,6 @@ export default function Book() {
     setCurrentLocation,
   } = useContext(AppCtx)!;
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const headerRef = useRef<HTMLDivElement | null>(null);
-  const headingRef = useRef<HTMLHeadingElement | null>(null);
 
   const selectChapter = useCallback<
     ({ previous, next }: { previous?: boolean; next?: boolean }) => void
@@ -83,7 +82,6 @@ export default function Book() {
     onSwipedLeft: () => selectChapter({ next: true }),
   });
 
-  // TODO: Context for the refs?
   return (
     <div
       ref={(el) => {
@@ -93,13 +91,10 @@ export default function Book() {
       }}
       className={container}
     >
-      <BookHeader headerRef={headerRef} headingRef={headingRef} />
-      <BookContent
-        parentRef={containerRef}
-        headerRef={headerRef}
-        headingRef={headingRef}
-        selectChapter={selectChapter}
-      />
+      <ContextProvider>
+        <BookHeader />
+        <BookContent parentRef={containerRef} selectChapter={selectChapter} />
+      </ContextProvider>
     </div>
   );
 }

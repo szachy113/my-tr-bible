@@ -1,7 +1,12 @@
-import { Chapter, Verse } from '@utils/fetchBooks';
+import { Book, Chapter, Verse } from '@utils/fetchBooks';
 import { useContext, useCallback, useMemo, useRef } from 'react';
-import { CurrentLocation, AppCtx } from '@app/AppContextProvider';
+import {
+  CurrentLocation,
+  AppCtx,
+  SetCurrentLocation,
+} from '@app/ContextProvider';
 import isMobile from 'ismobilejs';
+import { BookCtx } from '@components/Book/ContextProvider';
 import { useScrollCurrentVerseIntoView } from '@hooks/useScrollCurrentVerseIntoView';
 import { useEventListener, useInViewport, useTrackedEffect } from 'ahooks';
 import { useMarginBottom } from '@hooks/useMarginBottom';
@@ -13,8 +18,6 @@ import styles from './BookContent.module.css';
 
 interface BookContentProps {
   parentRef: React.MutableRefObject<HTMLDivElement | null>;
-  headerRef: React.MutableRefObject<HTMLDivElement | null>;
-  headingRef: React.MutableRefObject<HTMLHeadingElement | null>;
   selectChapter: ({
     previous,
     next,
@@ -38,11 +41,11 @@ const {
   'arrow-icon': arrowIcon,
 } = styles;
 
-function useScrollOnLocationChange({
-  bookIndex,
-  chapterIndex,
-  verseIndex,
-}: CurrentLocation): void {
+function useCurrentLocationChange(
+  { bookIndex, chapterIndex, verseIndex }: CurrentLocation,
+  setCurrentLocation: SetCurrentLocation,
+  data: Book[],
+): void {
   const scrollCurrentVerseIntoView = useScrollCurrentVerseIntoView();
 
   useTrackedEffect(
@@ -54,6 +57,39 @@ function useScrollOnLocationChange({
       const didBookChange = previousDeps?.[0] !== currentDeps[0];
       const didChapterChange = previousDeps?.[1] !== currentDeps[1];
       const didVerseChange = previousDeps?.[2] !== currentDeps[2];
+
+      if (didChapterChange) {
+        setCurrentLocation('chapterExtraVersesCount', 0);
+
+        const isPsalm = bookIndex === 18;
+        const currentBook = data[bookIndex];
+
+        if (isPsalm) {
+          // NOTE: Since there won't be more than two extra verses.
+          const firstTwoVerses = currentBook.content[
+            chapterIndex
+          ].content.slice(0, 2);
+          const extraVersesCount = firstTwoVerses.reduce(
+            (total, curr) =>
+              curr.content.every((word) => word.content.startsWith('<i>'))
+                ? total + 1
+                : total,
+            0,
+          );
+
+          setCurrentLocation('chapterExtraVersesCount', extraVersesCount);
+        }
+
+        const isPaulineEpistle = bookIndex >= 44 && bookIndex <= 58;
+
+        if (isPaulineEpistle) {
+          const isLastChapter = chapterIndex === currentBook.content.length - 1;
+
+          if (isLastChapter) {
+            setCurrentLocation('chapterExtraVersesCount', 1);
+          }
+        }
+      }
 
       if (didBookChange || didChapterChange) {
         window.scrollTo(0, 0);
@@ -89,15 +125,13 @@ const renderVerse = (verse: Verse): (string | JSX.Element)[] =>
 
 export default function BookContent({
   parentRef,
-  headerRef,
-  headingRef,
   selectChapter,
 }: BookContentProps) {
   const {
     data,
     currentLocation,
-    currentVerseRef,
     setCurrentLocation,
+    currentVerseRef,
     shouldShowReferenceForm,
     language,
   } = useContext(AppCtx)!;
@@ -107,6 +141,7 @@ export default function BookContent({
   );
   const containerRef = useRef<HTMLDivElement | null>(null);
   const isDesktop = !isMobile().any;
+  const { headingRef, headerRef } = useContext(BookCtx)!;
   const heightHeadingTextStartsAt = headingRef.current
     ? parseFloat(getComputedStyle(headingRef.current).fontSize)
     : 0;
@@ -115,9 +150,10 @@ export default function BookContent({
   const [isHeadingInView] = useInViewport(headingRef.current, {
     threshold: headingTextThreshold,
   });
+
   const headingMarginBottom = useMarginBottom<HTMLHeadingElement>(headingRef);
 
-  useScrollOnLocationChange(currentLocation);
+  useCurrentLocationChange(currentLocation, setCurrentLocation, data!);
 
   const renderChapter = useCallback<
     (chapter: Chapter) => (JSX.Element | null)[]
@@ -126,7 +162,6 @@ export default function BookContent({
       const isPsalm = currentLocation.bookIndex === 18;
       const verseSeparator = /pl/g.test(language) ? ',' : ':';
 
-      let extraVersesCount = 0;
       let didRenderExtraVerses = false;
 
       const isPaulineEpistle =
@@ -140,15 +175,9 @@ export default function BookContent({
             }
 
             if (headerRef.current) {
-              extraVersesCount += 1;
-
-              // NOTE: There probably won't be more than two extra verses.
               const nextVerse = chapter.content[j + 1];
-              const isNextVerseExtra = isExtraVerse(nextVerse);
-
-              if (isNextVerseExtra) {
-                extraVersesCount += 1;
-              }
+              const isNextVerseExtra =
+                currentLocation.chapterExtraVersesCount === 2;
 
               didRenderExtraVerses = true;
 
@@ -179,8 +208,10 @@ export default function BookContent({
           }
         }
 
-        const verseNumber =
-          extraVersesCount > 0 ? j + 1 - extraVersesCount : j + 1;
+        const hasExtraVerses = currentLocation.chapterExtraVersesCount > 0;
+        const verseNumber = hasExtraVerses
+          ? j + 1 - currentLocation.chapterExtraVersesCount
+          : j + 1;
 
         return (
           <li

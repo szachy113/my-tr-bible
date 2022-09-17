@@ -1,6 +1,6 @@
 import { DebouncedFunc } from 'lodash';
 import { useRef, useContext, useCallback, useEffect } from 'react';
-import { AppCtx } from '@app/AppContextProvider';
+import { AppCtx } from '@app/ContextProvider';
 import { useEventListener } from 'ahooks';
 import { useScrollCurrentVerseIntoView } from '@hooks/useScrollCurrentVerseIntoView';
 import styles from './ReferenceForm.module.css';
@@ -99,7 +99,6 @@ export default function ReferenceForm() {
     setShouldShow(false);
   });
 
-  // TODO: Tidy it up.
   // TODO: Throttle (?) (Enter spam case).
   const handleSubmit = useCallback<React.ChangeEventHandler<HTMLFormElement>>(
     (e) => {
@@ -185,25 +184,17 @@ export default function ReferenceForm() {
       const isPsalm = targetBookIndex === 18;
 
       if (!isLastVerse && isPsalm) {
-        // TODO: Should be shared by some context!!
-        // NOTE: Since there won't be more than two extra verses.
-        const firstTwoVerses = targetChapter.content.slice(0, 2);
-        const extraVersesCount = firstTwoVerses.reduce(
-          (total, curr) =>
-            curr.content.every((word) => word.content.startsWith('<i>'))
-              ? total + 1
-              : total,
-          0,
-        );
-        const hasExtraVerses = extraVersesCount > 0;
+        const hasExtraVerses = currentLocation.chapterExtraVersesCount > 0;
 
         if (hasExtraVerses) {
           const isInExtraVersesRange =
-            targetVerseIndex >= targetChapter.content.length - extraVersesCount;
+            targetVerseIndex >=
+            targetChapter.content.length -
+              currentLocation.chapterExtraVersesCount;
 
           targetVerseIndex += isInExtraVersesRange
             ? targetChapter.content.length - targetVerseNumber
-            : extraVersesCount;
+            : currentLocation.chapterExtraVersesCount;
         }
       }
 
