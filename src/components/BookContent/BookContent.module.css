@@ -37,6 +37,11 @@
   display: flex;
 }
 
+.verse-content--hebrew-letter {
+  display: block;
+  text-align: center;
+}
+
 .verse-number {
   margin-right: 1ch;
 }
@@ -49,8 +54,8 @@
   --typography-spacing-vertical: 0;
 
   display: block;
-  font-size: 0.9em;
   font-weight: initial;
+  font-size: 0.9em;
   max-width: 50ch;
   text-align: center;
 }

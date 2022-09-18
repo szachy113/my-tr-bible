@@ -198,6 +198,19 @@ export default function ReferenceForm() {
         }
       }
 
+      const isPsalm119 = isPsalm && targetChapterNumber === 119;
+
+      if (!isLastVerse && isPsalm119) {
+        const isSectionBeginningVerse = (targetVerseNumber - 9) % 8 === 0;
+        const shortage = Math.ceil(targetVerseIndex / 8);
+
+        targetVerseIndex += isSectionBeginningVerse ? shortage + 1 : shortage;
+
+        if (targetVerseIndex > targetChapter.content.length) {
+          targetVerseIndex = targetChapter.content.length - 1;
+        }
+      }
+
       setCurrentLocation('verseIndex', targetVerseIndex);
 
       if (targetVerseIndex !== currentLocation.verseIndex) {

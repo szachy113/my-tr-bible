@@ -31,6 +31,7 @@ const {
   container,
   'verse-style': verseStyle,
   'verse-content': verseContent,
+  'verse-content--hebrew-letter': verseContentHebrewLetter,
   'verse-number': verseNumberStyle,
   'verse--focused': verseFocused,
   'verse--extra': verseExtra,
@@ -40,6 +41,7 @@ const {
   'arrow--left': arrowLeft,
   'arrow-icon': arrowIcon,
 } = styles;
+const HEBREW_ALPHABET: string = 'אבגדהוזחטיכלמנסעפצקרשת';
 
 function useCurrentLocationChange(
   { bookIndex, chapterIndex, verseIndex }: CurrentLocation,
@@ -160,6 +162,7 @@ export default function BookContent({
   >(
     (chapter) => {
       const isPsalm = currentLocation.bookIndex === 18;
+      const isPsalm119 = isPsalm && currentLocation.chapterIndex === 118;
       const verseSeparator = /pl/g.test(language) ? ',' : ':';
 
       let didRenderExtraVerses = false;
@@ -169,6 +172,25 @@ export default function BookContent({
 
       return chapter.content.map((verse, j) => {
         if (isPsalm) {
+          if (isPsalm119) {
+            const isHebrewLetterVerse =
+              verse.content.length === 1 &&
+              !verse.content[verse.content.length - 1].content.includes('.');
+
+            if (isHebrewLetterVerse) {
+              const hebrewLetterIndex = j / 9;
+              const hebrewLetterName = verse.content[0].content;
+
+              return (
+                <li className={verseStyle} key={verse.id}>
+                  <div className={clsx(verseContent, verseContentHebrewLetter)}>
+                    <p>{`${HEBREW_ALPHABET[hebrewLetterIndex]} ${hebrewLetterName}`}</p>
+                  </div>
+                </li>
+              );
+            }
+          }
+
           if (isExtraVerse(verse)) {
             if (didRenderExtraVerses) {
               return null;
@@ -209,9 +231,18 @@ export default function BookContent({
         }
 
         const hasExtraVerses = currentLocation.chapterExtraVersesCount > 0;
-        const verseNumber = hasExtraVerses
-          ? j + 1 - currentLocation.chapterExtraVersesCount
-          : j + 1;
+
+        let verseNumber = j + 1;
+
+        if (hasExtraVerses) {
+          verseNumber -= currentLocation.chapterExtraVersesCount;
+        }
+
+        if (isPsalm119) {
+          const excess = Math.ceil(j / 9);
+
+          verseNumber -= excess;
+        }
 
         return (
           <li
