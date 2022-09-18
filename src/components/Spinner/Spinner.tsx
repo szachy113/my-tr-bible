@@ -1,4 +1,4 @@
-import { useId, useRef, useState, useLayoutEffect } from 'react';
+import { useId, useRef, useState, useEffect } from 'react';
 import { LanguageCode } from 'iso-639-1';
 import { FontAwesomeIcon as Icon } from '@fortawesome/react-fontawesome';
 import { faBookBible } from '@fortawesome/free-solid-svg-icons';
@@ -12,13 +12,13 @@ interface SpinnerProps {
 const { container, spinner } = styles;
 const flagsPath = '../../../node_modules/flag-icons/flags/1x1';
 
-export default function Spinner({ language }: SpinnerProps) {
-  const svgDefsPatternId = useId();
-  const iconRef = useRef<SVGSVGElement | null>(null);
+function useFontAwesomeIconPathDAttribute(
+  iconRef: React.MutableRefObject<SVGSVGElement | null>,
+): string {
   const [fontAwesomeIconPathDAttribute, setFontAwesomeIconPathDAttribute] =
     useState<string>('');
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!iconRef.current?.firstChild) {
       return;
     }
@@ -33,7 +33,16 @@ export default function Spinner({ language }: SpinnerProps) {
     setFontAwesomeIconPathDAttribute(dAttribute.nodeValue);
 
     iconRef.current.removeChild(iconPathElement);
-  }, []);
+  }, [iconRef]);
+
+  return fontAwesomeIconPathDAttribute;
+}
+
+export default function Spinner({ language }: SpinnerProps) {
+  const svgDefsPatternId = useId();
+  const iconRef = useRef<SVGSVGElement | null>(null);
+  const fontAwesomeIconPathDAttribute =
+    useFontAwesomeIconPathDAttribute(iconRef);
 
   return (
     <div className={container}>

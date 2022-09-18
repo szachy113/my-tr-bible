@@ -1,8 +1,12 @@
 import { useContext } from 'react';
 import { AppCtx } from '@app/ContextProvider';
-import { useMarginBottom } from '@hooks/useMarginBottom';
 import { BookCtx } from '@components/Book/ContextProvider';
+import { useMarginBottom } from '@hooks/useMarginBottom';
+import { isExtraVerse } from '@utils/isExtraVerse';
 import styles from './BookHeader.module.css';
+
+export const getHeadingPaddingTop = (headingMarginBottom: number): number =>
+  headingMarginBottom * 1.75;
 
 const { container } = styles;
 
@@ -17,9 +21,9 @@ export default function BookHeader() {
 
   const { name, content } = data[currentLocation.bookIndex];
   const isPsalm = currentLocation.bookIndex === 18;
-  const hasExtraVerses = content[currentLocation.chapterIndex].content.some(
-    (verse) => verse.content.every((word) => word.content.startsWith('<i>')),
-  );
+  const hasExtraVerses =
+    content[currentLocation.chapterIndex].content.some(isExtraVerse);
+  const headingPaddingTop = getHeadingPaddingTop(headingMarginBottom);
 
   // TODO: Handle name exception(s) (i.e., Psalms) more generically (other languages). Supabase.
   return (
@@ -35,11 +39,11 @@ export default function BookHeader() {
         style={
           isPsalm && hasExtraVerses
             ? {
-                paddingTop: headingMarginBottom * 1.75,
+                paddingTop: headingPaddingTop,
                 marginBottom: 0,
               }
             : {
-                paddingTop: headingMarginBottom * 1.75,
+                paddingTop: headingPaddingTop,
               }
         }
       >

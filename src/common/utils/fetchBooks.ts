@@ -43,10 +43,9 @@ export async function fetchBooks({
 
   if (!targetVersion) {
     const errorSubject = language && version ? 'Version' : 'Language';
-    const README_LINK = 'README_LINK';
 
     throw new Error(
-      `${errorSubject} not supported! Check ${README_LINK} for more information.`,
+      `${errorSubject} not supported! Please check the link for more information.`,
     );
   }
 

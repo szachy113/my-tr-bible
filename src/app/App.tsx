@@ -1,3 +1,4 @@
+import { DebouncedFunc } from 'lodash';
 import { useState } from 'react';
 import { useEventListener, useDebounceFn } from 'ahooks';
 import ReferenceForm from '@components/ReferenceForm';
@@ -9,17 +10,10 @@ import '../overwritten.css';
 
 const { container } = styles;
 
-export default function App() {
-  const [shouldShowReferenceForm, _setShouldShowReferenceForm] = useState(true);
+function useToggleReferenceFormOnScroll(
+  setter: DebouncedFunc<(value: boolean) => void>,
+): void {
   const [previousTopPos, setPreviousTopPos] = useState(0);
-
-  const { run: setShouldShowReferenceForm } = useDebounceFn<
-    (value: boolean) => void
-  >(
-    (value) => _setShouldShowReferenceForm(value),
-    // NOTE: Half the animation duration.
-    { wait: 125 },
-  );
 
   useEventListener('scroll', () => {
     const currentTopPos = document.documentElement.scrollTop;
@@ -36,16 +30,30 @@ export default function App() {
 
     if (hasUserOrigin) {
       if (currentTopPos > previousTopPos) {
-        setShouldShowReferenceForm(false);
+        setter(false);
       }
 
       if (currentTopPos < previousTopPos) {
-        setShouldShowReferenceForm(true);
+        setter(true);
       }
     }
 
     setPreviousTopPos(currentTopPos);
   });
+}
+
+export default function App() {
+  const [shouldShowReferenceForm, _setShouldShowReferenceForm] = useState(true);
+
+  const { run: setShouldShowReferenceForm } = useDebounceFn<
+    (value: boolean) => void
+  >(
+    (value) => _setShouldShowReferenceForm(value),
+    // NOTE: Half the animation duration.
+    { wait: 125 },
+  );
+
+  useToggleReferenceFormOnScroll(setShouldShowReferenceForm);
 
   // TODO: Navigation etc.
   return (
