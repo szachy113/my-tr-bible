@@ -9,7 +9,7 @@ interface SpinnerProps {
   language: LanguageCode;
 }
 
-const { container, spinner } = styles;
+const { spinner } = styles;
 const flagsPath = '../../../node_modules/flag-icons/flags/1x1';
 
 function useFontAwesomeIconPathDAttribute(
@@ -45,7 +45,7 @@ export default function Spinner({ language }: SpinnerProps) {
     useFontAwesomeIconPathDAttribute(iconRef);
 
   return (
-    <div className={container}>
+    <div>
       <Icon spin ref={iconRef} icon={faBookBible} className={spinner} />
       {iconRef.current &&
         createPortal(

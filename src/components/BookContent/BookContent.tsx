@@ -31,7 +31,7 @@ interface BookContentProps {
 
 const {
   container,
-  'verse-style': verseStyle,
+  verse: verseStyle,
   'verse-content': verseContent,
   'verse-content--hebrew-letter': verseContentHebrewLetter,
   'verse-number': verseNumberStyle,

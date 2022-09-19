@@ -11,7 +11,9 @@ import {
 import { useParams } from 'react-router-dom';
 import { LanguageCode } from 'iso-639-1';
 import { useQuery } from 'react-query';
+import { ErrorMessageProps as FetchError } from '@components/Error/Error';
 import Spinner from '@components/Spinner';
+import Error from '@components/Error';
 
 interface ContextProviderProps {
   shouldShowReferenceForm: boolean;
@@ -51,13 +53,17 @@ export default function ContextProvider({
   };
   // TODO: Default language should be based on user's browser preferences.
   const language = useMemo(() => params.language ?? 'en', [params.language]);
-  const { isLoading, data } = useQuery('books', () =>
-    fetchBooks({
-      language,
-      version: params.version,
-    }),
+  const { data, isLoading, isError, error } = useQuery<Book[], FetchError>(
+    'books',
+    () =>
+      fetchBooks({
+        language,
+        version: params.version,
+      }),
+    {
+      retry: 1,
+    },
   );
-
   const [currentLocation, _setCurrentLocation] = useState<CurrentLocation>({
     bookIndex: 42, // NOTE: John
     chapterIndex: 0,
@@ -95,10 +101,12 @@ export default function ContextProvider({
     ],
   );
 
-  // TODO: Handle error.
-
   if (isLoading) {
     return <Spinner language={language} />;
+  }
+
+  if (isError) {
+    return <Error message={error.message} />;
   }
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;

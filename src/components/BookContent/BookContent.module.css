@@ -18,7 +18,7 @@
   padding: 0.5em var(--container-padding-inline);
 }
 
-.verse-style {
+.verse {
   --typography-spacing-vertical: 0;
 
   border: 1px dashed transparent;
@@ -26,7 +26,7 @@
   list-style: none;
 }
 
-.verse-style:not(:last-child) {
+.verse:not(:last-child) {
   margin-bottom: 1ch;
 }
 

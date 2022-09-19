@@ -1,0 +1,56 @@
+.outer-container {
+  width: 87.5%;
+  height: 50vh;
+  border-radius: 0.25em;
+  row-gap: 0.25em;
+  color: var(--error-text-color);
+  background-color: white;
+  position: relative;
+}
+
+.inner-container {
+  border: 1px solid var(--error-text-color);
+  background-color: var(--error-background-color);
+  padding: 1em;
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  border-radius: inherit;
+  text-align: center;
+}
+
+@media (min-width: 512px) {
+  .outer-container {
+    width: 75%;
+  }
+}
+
+@media (min-width: 768px) {
+  .outer-container {
+    width: 62.5%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .outer-container {
+    width: 50%;
+  }
+}
+
+.icon {
+  font-size: calc(var(--font-size) * 2);
+}
+
+.heading {
+  --typography-spacing-vertical: 0;
+
+  color: inherit;
+}
+
+.message {
+  --typography-spacing-vertical: 0;
+
+  color: inherit;
+  max-width: 50ch;
+}
