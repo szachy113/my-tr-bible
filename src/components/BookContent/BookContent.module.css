@@ -58,6 +58,7 @@
   font-size: 0.9em;
   max-width: 50ch;
   text-align: center;
+  padding-inline: var(--container-padding-inline);
 }
 
 .list {
@@ -82,8 +83,7 @@
   cursor: pointer;
   opacity: calc(1 / 3);
   transition: opacity var(--animation-duration) ease-out;
-
-  width: calc(var(--container-padding-inline) / 1.25);
+  width: var(--container-padding-inline);
 }
 
 .arrow:hover {

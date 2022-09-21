@@ -24,7 +24,6 @@ export interface CurrentLocation {
   bookIndex: number;
   chapterIndex: number;
   verseIndex: number;
-  chapterExtraVersesCount: number;
 }
 
 export type SetCurrentLocation = (
@@ -68,7 +67,6 @@ export default function ContextProvider({
     bookIndex: 42, // NOTE: John
     chapterIndex: 0,
     verseIndex: -1,
-    chapterExtraVersesCount: 0,
   });
   const currentVerseRef = useRef<HTMLLIElement | null>(null);
 

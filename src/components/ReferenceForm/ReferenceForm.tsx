@@ -3,6 +3,10 @@ import { useRef, useContext, useCallback, useEffect } from 'react';
 import { AppCtx } from '@app/ContextProvider';
 import { useEventListener } from 'ahooks';
 import { useScrollCurrentVerseIntoView } from '@hooks/useScrollCurrentVerseIntoView';
+import {
+  isPaulineEpistleExtraVerse,
+  isPsalmWithExtraVerse,
+} from '@utils/extraVerses';
 import styles from './ReferenceForm.module.css';
 
 const { container } = styles;
@@ -102,6 +106,7 @@ export default function ReferenceForm() {
   const handleSubmit = useCallback<React.ChangeEventHandler<HTMLFormElement>>(
     (e) => {
       e.preventDefault();
+      setCurrentLocation('verseIndex', -1);
 
       const input = e.target[0] as HTMLInputElement;
       const trimmedInputValue = input.value.trim();
@@ -177,24 +182,21 @@ export default function ReferenceForm() {
       const isPaulineEpistle = targetBookIndex >= 44 && targetBookIndex <= 58;
 
       if (isLastChapter && isLastVerse && isPaulineEpistle) {
-        targetVerseIndex -= 1;
+        const verseId = `${targetChapterIndex}${targetVerseIndex}`;
+
+        if (isPaulineEpistleExtraVerse(verseId)) {
+          targetVerseIndex -= 1;
+        }
       }
 
       const isPsalm = targetBookIndex === 18;
 
-      if (!isLastVerse && isPsalm) {
-        const hasExtraVerses = currentLocation.chapterExtraVersesCount > 0;
-
-        if (hasExtraVerses) {
-          const isInExtraVersesRange =
-            targetVerseIndex >=
-            targetChapter.content.length -
-              currentLocation.chapterExtraVersesCount;
-
-          targetVerseIndex += isInExtraVersesRange
-            ? targetChapter.content.length - targetVerseNumber
-            : currentLocation.chapterExtraVersesCount;
-        }
+      if (
+        !isLastVerse &&
+        isPsalm &&
+        isPsalmWithExtraVerse(targetChapterIndex)
+      ) {
+        targetVerseIndex += 1;
       }
 
       const isPsalm119 = isPsalm && targetChapterNumber === 119;

@@ -1,10 +1,6 @@
-import { Book, Chapter, Verse } from '@utils/fetchBooks';
+import { Chapter, Verse } from '@utils/fetchBooks';
 import { useContext, useCallback, useMemo, useRef } from 'react';
-import {
-  CurrentLocation,
-  AppCtx,
-  SetCurrentLocation,
-} from '@app/ContextProvider';
+import { CurrentLocation, AppCtx } from '@app/ContextProvider';
 import isMobile from 'ismobilejs';
 import { BookCtx } from '@components/Book/ContextProvider';
 import { useScrollCurrentVerseIntoView } from '@hooks/useScrollCurrentVerseIntoView';
@@ -14,7 +10,12 @@ import { getHeadingPaddingTop } from '@components/BookHeader/BookHeader';
 import { createPortal } from 'react-dom';
 import { FontAwesomeIcon as Icon } from '@fortawesome/react-fontawesome';
 import { faAngleRight, faAngleLeft } from '@fortawesome/free-solid-svg-icons';
-import { isExtraVerse } from '@utils/isExtraVerse';
+import {
+  getHebrewLetter,
+  isHebrewLetterVerse,
+  isPaulineEpistleExtraVerse,
+  isPsalmWithExtraVerse,
+} from '@utils/extraVerses';
 import clsx from 'clsx';
 import styles from './BookContent.module.css';
 
@@ -43,7 +44,6 @@ const {
   'arrow--left': arrowLeft,
   'arrow-icon': arrowIcon,
 } = styles;
-const HEBREW_ALPHABET: string = 'אבגדהוזחטיכלמנסעפצקרשת';
 
 const renderVerse = (verse: Verse): (string | JSX.Element)[] =>
   verse.content.map((word) => {
@@ -58,11 +58,11 @@ const renderVerse = (verse: Verse): (string | JSX.Element)[] =>
     return wordToRender;
   });
 
-function useCurrentLocationChange(
-  { bookIndex, chapterIndex, verseIndex }: CurrentLocation,
-  setCurrentLocation: SetCurrentLocation,
-  data: Book[] | null,
-): void {
+function useScrollOnCurrentLocationChange({
+  bookIndex,
+  chapterIndex,
+  verseIndex,
+}: CurrentLocation): void {
   const scrollCurrentVerseIntoView = useScrollCurrentVerseIntoView();
 
   useTrackedEffect(
@@ -74,44 +74,6 @@ function useCurrentLocationChange(
       const didBookChange = previousDeps?.[0] !== currentDeps[0];
       const didChapterChange = previousDeps?.[1] !== currentDeps[1];
       const didVerseChange = previousDeps?.[2] !== currentDeps[2];
-
-      if (didChapterChange) {
-        setCurrentLocation('chapterExtraVersesCount', 0);
-
-        const isPsalm = bookIndex === 18;
-
-        if (!data) {
-          return;
-        }
-
-        const currentBook = data[bookIndex];
-
-        if (isPsalm) {
-          // NOTE: Since there won't be more than two extra verses.
-          const firstTwoVerses = currentBook.content[
-            chapterIndex
-          ].content.slice(0, 2);
-          const extraVersesCount = firstTwoVerses.reduce(
-            (total, curr) =>
-              curr.content.every((word) => word.content.startsWith('<i>'))
-                ? total + 1
-                : total,
-            0,
-          );
-
-          setCurrentLocation('chapterExtraVersesCount', extraVersesCount);
-        }
-
-        const isPaulineEpistle = bookIndex >= 44 && bookIndex <= 58;
-
-        if (isPaulineEpistle) {
-          const isLastChapter = chapterIndex === currentBook.content.length - 1;
-
-          if (isLastChapter) {
-            setCurrentLocation('chapterExtraVersesCount', 1);
-          }
-        }
-      }
 
       if (didBookChange || didChapterChange) {
         window.scrollTo(0, 0);
@@ -162,7 +124,7 @@ export default function BookContent({
     threshold: headingTextThreshold,
   });
 
-  useCurrentLocationChange(currentLocation, setCurrentLocation, data);
+  useScrollOnCurrentLocationChange(currentLocation);
 
   const renderChapter = useCallback<
     (chapter: Chapter) => (JSX.Element | null)[]
@@ -170,61 +132,44 @@ export default function BookContent({
     (chapter) => {
       const isPsalm = currentLocation.bookIndex === 18;
       const isPsalm119 = isPsalm && currentLocation.chapterIndex === 118;
-      const verseSeparator = /pl/g.test(language) ? ',' : ':';
-
-      let didRenderExtraVerses = false;
-
       const isPaulineEpistle =
         currentLocation.bookIndex >= 44 && currentLocation.bookIndex <= 58;
+      const verseSeparator = /pl/g.test(language) ? ',' : ':';
 
       return chapter.content.map((verse, j) => {
         if (isPsalm) {
           if (isPsalm119) {
-            const isHebrewLetterVerse =
-              verse.content.length === 1 &&
-              !verse.content[verse.content.length - 1].content.includes('.');
-
-            if (isHebrewLetterVerse) {
+            if (isHebrewLetterVerse(verse.id)) {
               const hebrewLetterIndex = j / 9;
+              const hebrewLetter = getHebrewLetter(hebrewLetterIndex);
               const hebrewLetterName = verse.content[0].content;
 
               return (
                 <li className={verseStyle} key={verse.id}>
                   <div className={clsx(verseContent, verseContentHebrewLetter)}>
-                    <p>{`${HEBREW_ALPHABET[hebrewLetterIndex]} ${hebrewLetterName}`}</p>
+                    <p>{`${hebrewLetter} ${hebrewLetterName}`}</p>
                   </div>
                 </li>
               );
             }
           }
 
-          if (isExtraVerse(verse)) {
-            if (didRenderExtraVerses) {
-              return null;
-            }
-
-            if (headerRef.current) {
-              const nextVerse = chapter.content[j + 1];
-              const isNextVerseExtra =
-                currentLocation.chapterExtraVersesCount === 2;
-
-              didRenderExtraVerses = true;
-
-              return createPortal(
-                <h3 className={verseExtra}>
-                  {renderVerse(verse)}
-                  {isNextVerseExtra && renderVerse(nextVerse)}
-                </h3>,
-                headerRef.current,
-              );
-            }
+          if (
+            j === 0 &&
+            isPsalmWithExtraVerse(currentLocation.chapterIndex) &&
+            headerRef.current
+          ) {
+            return createPortal(
+              <h3 className={verseExtra}>{renderVerse(verse)}</h3>,
+              headerRef.current,
+            );
           }
         }
 
         const isLastVerse = j === chapter.content.length - 1;
 
         if (isLastVerse && isPaulineEpistle && parentRef.current) {
-          if (isExtraVerse(verse)) {
+          if (isPaulineEpistleExtraVerse(verse.id)) {
             return createPortal(
               <h3
                 className={verseExtra}
@@ -237,12 +182,13 @@ export default function BookContent({
           }
         }
 
-        const hasExtraVerses = currentLocation.chapterExtraVersesCount > 0;
+        const isPsalmAndHasExtraVerse =
+          isPsalm && isPsalmWithExtraVerse(currentLocation.chapterIndex);
 
         let verseNumber = j + 1;
 
-        if (hasExtraVerses) {
-          verseNumber -= currentLocation.chapterExtraVersesCount;
+        if (isPsalmAndHasExtraVerse) {
+          verseNumber -= 1;
         }
 
         if (isPsalm119) {
