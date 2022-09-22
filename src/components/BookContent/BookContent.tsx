@@ -1,4 +1,4 @@
-import { Chapter, Verse } from '@utils/fetchBooks';
+import { Chapter, Verse, Word } from '@utils/fetchBooks';
 import { useContext, useCallback, useMemo, useRef } from 'react';
 import { CurrentLocation, AppCtx } from '@app/ContextProvider';
 import isMobile from 'ismobilejs';
@@ -45,18 +45,61 @@ const {
   'arrow-icon': arrowIcon,
 } = styles;
 
-const renderVerse = (verse: Verse): (string | JSX.Element)[] =>
-  verse.content.map((word) => {
-    const wordToRender = `${word.content} `;
+const isWordExtra = (word?: Word) =>
+  word
+    ? word.content.startsWith('<i>') || word.content.endsWith('</i>')
+    : !!word;
 
-    if (word.content.startsWith('<i>') || word.content.endsWith('</i>')) {
-      // NOTE: Don't use dangerouslySetInnerHTML attribute.
+function renderVerse(verse: Verse): (string | JSX.Element)[] {
+  const { wordsToRender } = verse.content.reduce<{
+    extraWordsInARow: string[];
+    wordsToRender: (string | JSX.Element)[];
+  }>(
+    (prev, currentWord, i, arr) => {
+      const isLastWord = i === arr.length - 1;
+      const wordToRender = `${currentWord.content}${isLastWord ? '' : ' '}`;
+      const isCurrentWordExtra = isWordExtra(currentWord);
 
-      return <i key={word.id}>{wordToRender.replace(/<i>|<\/i>/g, '')}</i>;
-    }
+      if (isCurrentWordExtra) {
+        const nextWord = arr[i + 1];
+        const isNextWordExtra = isWordExtra(nextWord);
+        // NOTE: Not using the dangerouslySetInnerHTML attribute.
+        const currentWordContent = wordToRender.replace(/<i>|<\/i>/g, '');
 
-    return wordToRender;
-  });
+        if (isNextWordExtra) {
+          return {
+            ...prev,
+            extraWordsInARow: [...prev.extraWordsInARow, currentWordContent],
+          };
+        }
+
+        const extraWordsContent = [
+          ...prev.extraWordsInARow,
+          currentWordContent,
+        ].join(' ');
+
+        return {
+          ...prev,
+          wordsToRender: [
+            ...prev.wordsToRender,
+            <i key={currentWord.id}>{extraWordsContent}</i>,
+          ],
+        };
+      }
+
+      return {
+        extraWordsInARow: [],
+        wordsToRender: [...prev.wordsToRender, wordToRender],
+      };
+    },
+    {
+      extraWordsInARow: [],
+      wordsToRender: [],
+    },
+  );
+
+  return wordsToRender;
+}
 
 function useScrollOnCurrentLocationChange({
   bookIndex,
@@ -136,7 +179,7 @@ export default function BookContent({
         currentLocation.bookIndex >= 44 && currentLocation.bookIndex <= 58;
       const verseSeparator = /pl/g.test(language) ? ',' : ':';
 
-      return chapter.content.map((verse, j) => {
+      return chapter.content.map((verse, j, arr) => {
         if (isPsalm) {
           if (isPsalm119) {
             if (isHebrewLetterVerse(verse.id)) {
@@ -166,7 +209,7 @@ export default function BookContent({
           }
         }
 
-        const isLastVerse = j === chapter.content.length - 1;
+        const isLastVerse = j === arr.length - 1;
 
         if (isLastVerse && isPaulineEpistle && parentRef.current) {
           if (isPaulineEpistleExtraVerse(verse.id)) {
@@ -279,6 +322,7 @@ export default function BookContent({
     [selectChapter],
   );
 
+  // TODO: Should initially HIDE arrows on desktop.
   return (
     <div ref={containerRef} className={container}>
       {isDesktop && renderChapterArrow('left')}

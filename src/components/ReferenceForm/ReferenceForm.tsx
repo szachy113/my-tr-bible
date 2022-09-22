@@ -213,7 +213,7 @@ export default function ReferenceForm() {
       const isPaulineEpistle = targetBookIndex >= 44 && targetBookIndex <= 58;
 
       if (isLastChapter && isLastVerse && isPaulineEpistle) {
-        const verseId = `${targetChapterIndex}${targetVerseIndex}`;
+        const verseId = `${targetChapterIndex}.${targetVerseIndex}`;
 
         if (isPaulineEpistleExtraVerse(verseId)) {
           targetVerseIndex -= 1;

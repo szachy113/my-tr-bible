@@ -47,27 +47,27 @@ const PSALM_119_HEBREW_LETTERS_VERSES_IDS: string[] = [
 ];
 
 export const isHebrewLetterVerse = (id: string): boolean =>
-  PSALM_119_HEBREW_LETTERS_VERSES_IDS.includes(id.slice(3));
+  PSALM_119_HEBREW_LETTERS_VERSES_IDS.includes(id.slice(id.indexOf('.') + 1));
 
 const HEBREW_ALPHABET: string = 'אבגדהוזחטיכלמנסעפצקרשת';
 
 export const getHebrewLetter = (index: number) => HEBREW_ALPHABET[index];
 
 const PAULINE_EPISTLES_EXTRA_VERSES_IDS: string[] = [
-  '1527',
-  '1524',
-  '1214',
-  '518',
-  '524',
-  '323',
-  '318',
-  '428',
-  '218',
-  '521',
-  '322',
-  '215',
-  '025',
-  '1225',
+  '15.27',
+  '15.24',
+  '12.14',
+  '5.18',
+  '5.24',
+  '3.23',
+  '3.18',
+  '4.28',
+  '2.18',
+  '5.21',
+  '3.22',
+  '2.15',
+  '0.25',
+  '12.25',
 ];
 
 export const isPaulineEpistleExtraVerse = (id: string): boolean =>

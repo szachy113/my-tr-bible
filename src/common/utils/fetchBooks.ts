@@ -75,9 +75,9 @@ export async function fetchBooks({
     const content: Chapter[] = book.map((verses, j) => ({
       id: `${j}`,
       content: verses.map((verse, k) => ({
-        id: `${j}${k}`,
+        id: `${j}.${k}`,
         content: verse.split(' ').map((word, l) => ({
-          id: `${j}${k}${l}`,
+          id: `${j}.${k}.${l}`,
           content: word,
         })),
       })),
