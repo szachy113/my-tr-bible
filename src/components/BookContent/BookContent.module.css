@@ -64,12 +64,16 @@
 .list {
   --spacing: 0;
 
-  padding-inline: 1ch;
+  padding-inline: 0;
 }
 
-@media (max-width: 768px) {
-  .list {
+@media (min-width: 768px) {
+  .verse--extra {
     padding-inline: 0;
+  }
+
+  .list {
+    padding-inline: 1ch;
   }
 }
 

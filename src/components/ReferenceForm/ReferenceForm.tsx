@@ -108,22 +108,53 @@ export default function ReferenceForm() {
       e.preventDefault();
       setCurrentLocation('verseIndex', -1);
 
-      const input = e.target[0] as HTMLInputElement;
-      const trimmedInputValue = input.value.trim();
+      const inputEl = e.target[0] as HTMLInputElement;
+      const trimmedInputValue = inputEl.value.trim().replace(/\s+/g, ' ');
 
-      input.value = trimmedInputValue;
+      inputEl.value = trimmedInputValue;
+
+      const splitInput = trimmedInputValue
+        .toLowerCase()
+        .split(/[\s|,|:|.]/g)
+        .filter((input) => input);
 
       const [bookInput, chapterInput, verseInput] =
-        trimmedInputValue.split(/[\s|,|:|.]/g);
+        Number(splitInput[0]) || ['i', 'ii', 'iii'].includes(splitInput[0])
+          ? [`${splitInput[0]} ${splitInput[1]}`, ...splitInput.slice(2)]
+          : splitInput;
 
       if (!data || !bookInput) {
         return;
       }
 
-      const targetBookIndex = data.findIndex(
-        ({ abbreviation }) =>
-          abbreviation.toLowerCase() === bookInput.toLowerCase(),
-      );
+      const targetBookIndex = data.findIndex(({ name, abbreviation }) => {
+        const makeComparable = (value: string): string =>
+          value.toLowerCase().replace(/[\s|.]/g, '');
+
+        const [potentialRomanNumeral] = name.split(' ');
+        const [potentialArabicNumeral] = bookInput.split(' ');
+        const doesNameHaveRomanNumeral =
+          potentialRomanNumeral.length <= 3 &&
+          potentialRomanNumeral.split('').every((char) => char === 'I');
+        const doesInputHaveArabicNumeral =
+          potentialArabicNumeral.length === 1 &&
+          !!Number(potentialArabicNumeral);
+
+        let comparableInput = makeComparable(bookInput);
+
+        if (doesNameHaveRomanNumeral && doesInputHaveArabicNumeral) {
+          comparableInput = `${'i'.repeat(
+            Number(potentialArabicNumeral),
+          )}${comparableInput.slice(1)}`;
+        }
+
+        const comparableName = makeComparable(name);
+        const comparableAbbreviation = makeComparable(abbreviation);
+
+        return [comparableAbbreviation, comparableName].includes(
+          comparableInput,
+        );
+      });
 
       if (targetBookIndex < 0) {
         return;

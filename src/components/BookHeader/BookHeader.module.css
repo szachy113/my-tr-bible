@@ -1,10 +1,10 @@
 .container {
   text-align: center;
-  padding-inline: 3ch;
+  padding-inline: 2.5ch;
 }
 
-@media (max-width: 512px) {
+@media (min-width: 512px) {
   .container {
-    padding-inline: 2.5ch;
+    padding-inline: 3ch;
   }
 }

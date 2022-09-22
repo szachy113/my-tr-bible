@@ -47,7 +47,7 @@ export default function BookHeader() {
               }
         }
       >
-        {name === 'Księga Psalmów' ? 'Psalm' : name}{' '}
+        {name === 'Księga Psalmów' || name === 'Psalms' ? 'Psalm' : name}{' '}
         {currentLocation.chapterIndex + 1}
       </h2>
     </div>
