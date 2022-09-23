@@ -51,7 +51,7 @@ export default function ContextProvider({
     version?: string;
   };
   // TODO: Default language should be based on user's browser preferences.
-  const language = useMemo(() => params.language ?? 'en', [params.language]);
+  const language = params.language ?? 'en';
   const { data, isLoading, isError, error } = useQuery<Book[], FetchError>(
     'books',
     () =>

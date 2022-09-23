@@ -24,6 +24,7 @@ function useInputFocus(
 
     if (!shouldShow) {
       inputRef.current.blur();
+      inputRef.current.removeAttribute('aria-invalid');
 
       return;
     }
@@ -105,10 +106,14 @@ export default function ReferenceForm() {
 
   const handleSubmit = useCallback<React.ChangeEventHandler<HTMLFormElement>>(
     (e) => {
+      if (!inputRef.current) {
+        return;
+      }
+
       e.preventDefault();
       setCurrentLocation('verseIndex', -1);
 
-      const inputEl = e.target[0] as HTMLInputElement;
+      const { current: inputEl } = inputRef;
       const trimmedInputValue = inputEl.value.trim().replace(/\s+/g, ' ');
 
       inputEl.value = trimmedInputValue;
@@ -117,13 +122,15 @@ export default function ReferenceForm() {
         .toLowerCase()
         .split(/[\s|,|:|.]/g)
         .filter((input) => input);
-
-      const [bookInput, chapterInput, verseInput] =
+      const separatedInput =
         Number(splitInput[0]) || ['i', 'ii', 'iii'].includes(splitInput[0])
           ? [`${splitInput[0]} ${splitInput[1]}`, ...splitInput.slice(2)]
           : splitInput;
+      const [bookInput, chapterInput, verseInput] = separatedInput;
 
       if (!data || !bookInput) {
+        inputEl.setAttribute('aria-invalid', 'true');
+
         return;
       }
 
@@ -157,19 +164,19 @@ export default function ReferenceForm() {
       });
 
       if (targetBookIndex < 0) {
+        inputEl.setAttribute('aria-invalid', 'true');
+
         return;
       }
 
-      setShouldShow(false);
+      inputRef.current.setAttribute('aria-invalid', 'false');
       setCurrentLocation('bookIndex', targetBookIndex);
+      setShouldShow(false);
 
       const targetChapterNumber = Number(chapterInput);
       const targetBook = data[targetBookIndex];
 
-      const targetChapterIndex =
-        targetChapterNumber > targetBook.content.length
-          ? targetBook.content.length - 1
-          : targetChapterNumber - 1;
+      let targetChapterIndex = targetChapterNumber - 1;
 
       if (
         ((targetBookIndex === currentLocation.bookIndex && !chapterInput) ||
@@ -190,6 +197,16 @@ export default function ReferenceForm() {
         return;
       }
 
+      const usedVerseSeparator = trimmedInputValue.match(/[,|:]/g)?.[0];
+
+      if (targetChapterNumber > targetBook.content.length) {
+        separatedInput[1] = ` ${targetBook.content.length}${usedVerseSeparator}`;
+
+        inputEl.value = separatedInput.join('');
+
+        targetChapterIndex = targetBook.content.length - 1;
+      }
+
       setCurrentLocation('chapterIndex', targetChapterIndex);
 
       const targetVerseNumber = Number(verseInput);
@@ -202,10 +219,23 @@ export default function ReferenceForm() {
 
       const targetChapter = targetBook.content[targetChapterIndex];
 
-      let targetVerseIndex =
-        targetVerseNumber > targetChapter.content.length
-          ? targetChapter.content.length - 1
-          : targetVerseNumber - 1;
+      let targetVerseIndex = targetVerseNumber - 1;
+
+      if (targetVerseNumber > targetChapter.content.length) {
+        if (targetChapterNumber <= targetBook.content.length) {
+          separatedInput[0] += ' ';
+        }
+
+        separatedInput[2] = `${
+          targetChapterNumber > targetBook.content.length
+            ? ''
+            : usedVerseSeparator
+        }${targetChapter.content.length}`;
+
+        inputEl.value = separatedInput.join('');
+
+        targetVerseIndex = targetChapter.content.length - 1;
+      }
 
       const isLastChapter =
         targetChapterIndex === targetBook.content.length - 1;
@@ -252,6 +282,7 @@ export default function ReferenceForm() {
       scrollCurrentVerseIntoView();
     },
     [
+      inputRef,
       data,
       setShouldShow,
       setCurrentLocation,

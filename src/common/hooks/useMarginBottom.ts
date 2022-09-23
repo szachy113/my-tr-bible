@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useLayoutEffect } from 'react';
 
 /**
  * For the gap to be consistent with Pico.css.
@@ -8,7 +8,7 @@ export function useMarginBottom<T extends HTMLElement>(
 ): number {
   const [elementMarginBottom, setElementMarginBottom] = useState(0);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!elementRef.current) {
       return;
     }
