@@ -2,13 +2,13 @@
   "name": "my-react-starter",
   "version": "0.0.0",
   "author": "szachy113",
+  "homepage": "https://mytrbible.netlify.app",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "format": "prettier --config .prettierrc './src/**/*.{ts,tsx,css,md,json}' --write",
-    "lint": "eslint ./src/**/*.{ts,tsx}",
-    "deploy": "gh-pages -d dist"
+    "lint": "eslint ./src/**/*.{ts,tsx}"
   },
   "dependencies": {
     "@picocss/pico": "^1.5.5",

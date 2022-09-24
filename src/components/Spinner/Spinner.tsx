@@ -10,7 +10,7 @@ interface SpinnerProps {
 }
 
 const { spinner } = styles;
-const flagsPath = '../../../node_modules/flag-icons/flags/1x1';
+const flagsPath = '/assets/flags';
 
 function useFontAwesomeIconPathDAttribute(
   iconRef: React.MutableRefObject<SVGSVGElement | null>,

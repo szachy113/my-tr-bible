@@ -155,10 +155,16 @@ export default function ReferenceForm() {
           )}${comparableInput.slice(1)}`;
         }
 
-        const comparableName = makeComparable(name);
+        const comparableNames = [makeComparable(name)];
+
+        // TODO: Handle name exception(s) (i.e., Psalms) more generically (other languages). Supabase. x2
+        if (comparableNames[0].includes('psalm')) {
+          comparableNames.push('psalm');
+        }
+
         const comparableAbbreviation = makeComparable(abbreviation);
 
-        return [comparableAbbreviation, comparableName].includes(
+        return [comparableAbbreviation, ...comparableNames].includes(
           comparableInput,
         );
       });
@@ -167,6 +173,15 @@ export default function ReferenceForm() {
         inputEl.setAttribute('aria-invalid', 'true');
 
         return;
+      }
+
+      const isPsalm = targetBookIndex === 18;
+
+      if (
+        (separatedInput[0] === 'psalmów' || separatedInput[0] === 'psalms') &&
+        isPsalm
+      ) {
+        separatedInput[0] = 'psalm';
       }
 
       inputRef.current.setAttribute('aria-invalid', 'false');
@@ -200,7 +215,9 @@ export default function ReferenceForm() {
       const usedVerseSeparator = trimmedInputValue.match(/[,|:]/g)?.[0];
 
       if (targetChapterNumber > targetBook.content.length) {
-        separatedInput[1] = ` ${targetBook.content.length}${usedVerseSeparator}`;
+        separatedInput[1] = ` ${targetBook.content.length}${
+          usedVerseSeparator ?? ''
+        }`;
 
         inputEl.value = separatedInput.join('');
 
@@ -221,36 +238,47 @@ export default function ReferenceForm() {
 
       let targetVerseIndex = targetVerseNumber - 1;
 
-      if (targetVerseNumber > targetChapter.content.length) {
+      const isLastVerse = targetVerseIndex === targetChapter.content.length - 1;
+      const isPsalm119 = isPsalm && targetChapterNumber === 119;
+
+      if (
+        targetVerseNumber > targetChapter.content.length ||
+        (isPsalm119 && targetVerseNumber > 176)
+      ) {
         if (targetChapterNumber <= targetBook.content.length) {
           separatedInput[0] += ' ';
         }
 
-        separatedInput[2] = `${
-          targetChapterNumber > targetBook.content.length
-            ? ''
-            : usedVerseSeparator
-        }${targetChapter.content.length}`;
-
-        inputEl.value = separatedInput.join('');
-
         targetVerseIndex = targetChapter.content.length - 1;
-      }
 
-      const isLastChapter =
-        targetChapterIndex === targetBook.content.length - 1;
-      const isLastVerse = targetVerseIndex === targetChapter.content.length - 1;
-      const isPaulineEpistle = targetBookIndex >= 44 && targetBookIndex <= 58;
-
-      if (isLastChapter && isLastVerse && isPaulineEpistle) {
+        const isPaulineEpistle = targetBookIndex >= 44 && targetBookIndex <= 58;
         const verseId = `${targetChapterIndex}.${targetVerseIndex}`;
+        const isPaulineEpistleAndHasExtraVerse =
+          isPaulineEpistle && isPaulineEpistleExtraVerse(verseId);
 
-        if (isPaulineEpistleExtraVerse(verseId)) {
+        if (isPaulineEpistleAndHasExtraVerse) {
           targetVerseIndex -= 1;
         }
-      }
 
-      const isPsalm = targetBookIndex === 18;
+        let correctedVerseNumber = targetChapter.content.length;
+
+        if (isPaulineEpistleAndHasExtraVerse) {
+          correctedVerseNumber = targetChapter.content.length - 1;
+        }
+
+        if (isPsalm119) {
+          correctedVerseNumber = 176;
+        }
+
+        if (isPsalm)
+          separatedInput[2] = `${
+            targetChapterNumber > targetBook.content.length
+              ? ''
+              : usedVerseSeparator
+          }${correctedVerseNumber}`;
+
+        inputEl.value = separatedInput.join('');
+      }
 
       if (
         !isLastVerse &&
@@ -259,8 +287,6 @@ export default function ReferenceForm() {
       ) {
         targetVerseIndex += 1;
       }
-
-      const isPsalm119 = isPsalm && targetChapterNumber === 119;
 
       if (!isLastVerse && isPsalm119) {
         const isSectionBeginningVerse = (targetVerseNumber - 9) % 8 === 0;

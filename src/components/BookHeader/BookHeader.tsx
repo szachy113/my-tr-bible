@@ -25,7 +25,7 @@ export default function BookHeader() {
     isPsalm && isPsalmWithExtraVerse(currentLocation.chapterIndex);
   const headingPaddingTop = getHeadingPaddingTop(headingMarginBottom);
 
-  // TODO: Handle name exception(s) (i.e., Psalms) more generically (other languages). Supabase.
+  // TODO: Handle name exception(s) (i.e., Psalms) more generically (other languages). Supabase. x1
   return (
     <div
       ref={headerRef}
@@ -47,7 +47,7 @@ export default function BookHeader() {
               }
         }
       >
-        {name === 'Księga Psalmów' || name === 'Psalms' ? 'Psalm' : name}{' '}
+        {name.includes('Psalm') ? 'Psalm' : name}{' '}
         {currentLocation.chapterIndex + 1}
       </h2>
     </div>

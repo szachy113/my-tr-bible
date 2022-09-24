@@ -1,4 +1,4 @@
-import { Chapter, Verse, Word } from '@utils/fetchBooks';
+import { Chapter, Verse } from '@utils/fetchBooks';
 import { useContext, useCallback, useMemo, useRef } from 'react';
 import { CurrentLocation, AppCtx } from '@app/ContextProvider';
 import isMobile from 'ismobilejs';
@@ -45,11 +45,6 @@ const {
   'arrow-icon': arrowIcon,
 } = styles;
 
-const isWordExtra = (word?: Word) =>
-  word
-    ? word.content.startsWith('<i>') || word.content.endsWith('</i>')
-    : !!word;
-
 function renderVerse(verse: Verse): (string | JSX.Element)[] {
   const { wordsToRender } = verse.content.reduce<{
     extraWordsInARow: string[];
@@ -58,32 +53,42 @@ function renderVerse(verse: Verse): (string | JSX.Element)[] {
     (prev, currentWord, i, arr) => {
       const isLastWord = i === arr.length - 1;
       const wordToRender = `${currentWord.content}${isLastWord ? '' : ' '}`;
-      const isCurrentWordExtra = isWordExtra(currentWord);
+      const isCurrentWordExtraWordsBeginning = wordToRender.startsWith('<i>');
 
-      if (isCurrentWordExtra) {
-        const nextWord = arr[i + 1];
-        const isNextWordExtra = isWordExtra(nextWord);
-        // NOTE: Not using the dangerouslySetInnerHTML attribute.
-        const currentWordContent = wordToRender.replace(/<i>|<\/i>/g, '');
+      const isCurrentWordExtraWordsEnding =
+        currentWord.content.includes('</i>');
 
-        if (isNextWordExtra) {
-          return {
-            ...prev,
-            extraWordsInARow: [...prev.extraWordsInARow, currentWordContent],
-          };
-        }
-
+      if (isCurrentWordExtraWordsEnding) {
         const extraWordsContent = [
           ...prev.extraWordsInARow,
-          currentWordContent,
+          wordToRender.slice(
+            isCurrentWordExtraWordsBeginning
+              ? wordToRender.indexOf('<i>') + '<i>'.length
+              : 0,
+            wordToRender.indexOf('</i>'),
+          ),
         ].join(' ');
+
+        const potentialPunctuationMark = wordToRender.slice(
+          wordToRender.indexOf('</i>') + '</i>'.length,
+        );
 
         return {
           ...prev,
           wordsToRender: [
             ...prev.wordsToRender,
             <i key={currentWord.id}>{extraWordsContent}</i>,
+            potentialPunctuationMark,
           ],
+        };
+      }
+
+      if (isCurrentWordExtraWordsBeginning) {
+        const currentWordContent = wordToRender.replace(/<i>|<\/i>/g, '');
+
+        return {
+          ...prev,
+          extraWordsInARow: [...prev.extraWordsInARow, currentWordContent],
         };
       }
 
