@@ -1,8 +1,8 @@
 import { FontAwesomeIcon as Icon } from '@fortawesome/react-fontawesome';
 import { faBug } from '@fortawesome/free-solid-svg-icons';
-import styles from './Error.module.css';
+import styles from './LoadingError.module.css';
 
-export interface ErrorMessageProps {
+export interface LoadingErrorMessageProps {
   message: string;
 }
 
@@ -32,7 +32,7 @@ function renderMessage(message: string): JSX.Element {
   return <p className={messageStyle}>{messageToRender}</p>;
 }
 
-export default function Error({ message }: ErrorMessageProps) {
+export default function LoadingError({ message }: LoadingErrorMessageProps) {
   return (
     <div className={outerContainer}>
       <div className={innerContainer}>

@@ -11,9 +11,9 @@ import {
 import { useParams } from 'react-router-dom';
 import { LanguageCode } from 'iso-639-1';
 import { useQuery } from 'react-query';
-import { ErrorMessageProps as FetchError } from '@components/Error/Error';
+import { LoadingErrorMessageProps as FetchError } from '@components/LoadingError/LoadingError';
 import Spinner from '@components/Spinner';
-import Error from '@components/Error';
+import LoadingError from '@components/LoadingError';
 
 interface ContextProviderProps {
   shouldShowReferenceForm: boolean;
@@ -104,7 +104,7 @@ export default function ContextProvider({
   }
 
   if (isError) {
-    return <Error message={error.message} />;
+    return <LoadingError message={error.message} />;
   }
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;

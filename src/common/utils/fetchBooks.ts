@@ -35,17 +35,20 @@ export async function fetchBooks({
 
   const targetVersion = bibleVersions.find((bibleVersion) => {
     if (language && version) {
-      return bibleVersion.abbreviation.toLowerCase() === version.toLowerCase();
+      return (
+        bibleVersion.language.code === language.toLowerCase() &&
+        bibleVersion.abbreviation.toLowerCase() === version.toLowerCase()
+      );
     }
 
     return bibleVersion.language.code === language.toLowerCase();
   });
 
   if (!targetVersion) {
-    const errorSubject = language && version ? 'Version' : 'Language';
+    const errorSubject = language && version ? 'Bible version' : 'language';
 
     throw new Error(
-      `${errorSubject} not supported! Please check the link for more information.`,
+      `There is nothing here! Please check the link for supported ${errorSubject}s.`,
     );
   }
 

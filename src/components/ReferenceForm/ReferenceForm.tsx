@@ -35,25 +35,13 @@ function useInputFocus(
   }, [shouldShow]);
 
   useEventListener('keydown', (e) => {
-    if (!inputRef.current) {
-      return;
-    }
-
     const scrollKeys = ['ArrowUp', 'ArrowDown'];
 
-    if (!scrollKeys.includes(e.key)) {
+    if (!inputRef.current || !scrollKeys.includes(e.key)) {
       return;
     }
 
     inputRef.current.blur();
-
-    if (e.key === 'ArrowUp') {
-      // TODO: Maybe reset a timeout?
-      setShouldShow(true);
-
-      return;
-    }
-
     setShouldShow(false);
   });
 
@@ -270,12 +258,11 @@ export default function ReferenceForm() {
           correctedVerseNumber = 176;
         }
 
-        if (isPsalm)
-          separatedInput[2] = `${
-            targetChapterNumber > targetBook.content.length
-              ? ''
-              : usedVerseSeparator
-          }${correctedVerseNumber}`;
+        separatedInput[2] = `${
+          targetChapterNumber > targetBook.content.length
+            ? ''
+            : usedVerseSeparator
+        }${correctedVerseNumber}`;
 
         inputEl.value = separatedInput.join('');
       }
