@@ -33,8 +33,14 @@
 .verse-content {
   --typography-spacing-vertical: 0;
 
-  max-width: 70ch;
+  width: min(100%, 70ch);
   display: flex;
+}
+
+@media (min-width: 1024px) {
+  .verse-content {
+    width: 70ch;
+  }
 }
 
 .verse-content--hebrew-letter {
@@ -44,6 +50,7 @@
 
 .verse-number {
   margin-right: 1ch;
+  user-select: none;
 }
 
 .verse--focused {

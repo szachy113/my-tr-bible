@@ -1,6 +1,8 @@
 .container {
   text-align: center;
   padding-inline: 2.5ch;
+  display: grid;
+  place-items: center;
 }
 
 @media (min-width: 512px) {

@@ -15,9 +15,14 @@ function useToggleReferenceFormOnScroll(
 ): void {
   const [previousTopPos, setPreviousTopPos] = useState(0);
 
+  // TODO: Wheel would be more accurate (Navbar first).
   useEventListener('scroll', () => {
     const currentTopPos = document.documentElement.scrollTop;
     const diff = Math.abs(currentTopPos - previousTopPos);
+
+    if (!currentTopPos) {
+      setter(false);
+    }
 
     if (
       currentTopPos === previousTopPos ||

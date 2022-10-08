@@ -9,7 +9,7 @@ import {
 } from '@utils/extraVerses';
 import styles from './ReferenceForm.module.css';
 
-const { container } = styles;
+const { container, input } = styles;
 
 function useInputFocus(
   shouldShow: boolean,
@@ -109,7 +109,7 @@ export default function ReferenceForm() {
       const splitInput = trimmedInputValue
         .toLowerCase()
         .split(/[\s|,|:|.]/g)
-        .filter((input) => input);
+        .filter((inputValue) => inputValue);
       const separatedInput =
         Number(splitInput[0]) || ['i', 'ii', 'iii'].includes(splitInput[0])
           ? [`${splitInput[0]} ${splitInput[1]}`, ...splitInput.slice(2)]
@@ -195,6 +195,8 @@ export default function ReferenceForm() {
       }
 
       if (!targetChapterNumber) {
+        inputEl.value = bookInput;
+
         setCurrentLocation('chapterIndex', 0);
 
         return;
@@ -217,6 +219,8 @@ export default function ReferenceForm() {
       const targetVerseNumber = Number(verseInput);
 
       if (!targetVerseNumber) {
+        inputEl.value = `${bookInput} ${chapterInput}`;
+
         setCurrentLocation('verseIndex', -1);
 
         return;
@@ -309,13 +313,15 @@ export default function ReferenceForm() {
       ref={containerRef}
       style={{
         transform: `translateY(${
-          !shouldShow ? `-${containerRef.current?.offsetHeight ?? 0}px` : 0
+          !shouldShow
+            ? `calc(${containerRef.current?.offsetHeight ?? 0}px * -1)`
+            : 0
         })`,
       }}
       className={container}
       onSubmit={handleSubmit}
     >
-      <input ref={inputRef} type="text" />
+      <input ref={inputRef} className={input} type="text" />
     </form>
   );
 }

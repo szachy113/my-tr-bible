@@ -54,7 +54,6 @@ function renderVerse(verse: Verse): (string | JSX.Element)[] {
       const isLastWord = i === arr.length - 1;
       const wordToRender = `${currentWord.content}${isLastWord ? '' : ' '}`;
       const isCurrentWordExtraWordsBeginning = wordToRender.startsWith('<i>');
-
       const isCurrentWordExtraWordsEnding =
         currentWord.content.includes('</i>');
 
@@ -252,7 +251,19 @@ export default function BookContent({
               [verseFocused]: currentLocation.verseIndex === j,
             })}
             key={verse.id}
-            onClick={() => setCurrentLocation('verseIndex', j)}
+            onClick={() => {
+              if (j === currentLocation.verseIndex) {
+                const selection = document.getSelection();
+
+                if (selection?.isCollapsed) {
+                  setCurrentLocation('verseIndex', -1);
+                }
+
+                return;
+              }
+
+              setCurrentLocation('verseIndex', j);
+            }}
           >
             <div className={verseContent}>
               <b className={verseNumberStyle}>

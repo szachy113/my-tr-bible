@@ -27,7 +27,7 @@ export default function Book() {
 
       const selection = document.getSelection();
 
-      if (selection) {
+      if (selection && !selection?.isCollapsed) {
         selection.removeAllRanges();
       }
 

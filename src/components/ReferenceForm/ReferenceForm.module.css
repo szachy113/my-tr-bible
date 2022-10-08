@@ -5,3 +5,8 @@
   transition: transform var(--animation-duration) ease-out;
   z-index: 11;
 }
+
+.input {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
